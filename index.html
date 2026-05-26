@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SlotVTG: Object-Centric Adapter for Generalizable Video Temporal Grounding</title>
+
+  <meta name="description" content="SlotVTG is a parameter-efficient framework that brings object-centric visual representation into pre-trained MLLMs for robust Video Temporal Grounding under domain shifts. CVPR 2026." />
+  <meta name="keywords" content="SlotVTG, Video Temporal Grounding, VTG, MLLM, Slot Attention, Object-Centric, CVPR 2026, Qwen2.5-VL, DINOv2" />
+  <meta name="author" content="Jiwook Han, Geo Ahn, Youngrae Kim, Jinwoo Choi" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="SlotVTG — Object-Centric Adapter for Generalizable VTG" />
+  <meta property="og:description" content="Injecting object-centric visual representations into pre-trained MLLMs for robust video temporal grounding — at minimal cost. CVPR 2026." />
+  <meta property="og:type" content="website" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif&display=swap" rel="stylesheet" />
+
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" />
+
+  <!-- Tailwind via CDN (dev mode is fine for static pages) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0a0e27',
+            ink2: '#11163a',
+            slot1: '#ff6b6b', /* coral - person */
+            slot2: '#4ecdc4', /* turquoise - object */
+            slot3: '#ffd93d', /* gold - context */
+            slot4: '#a78bfa', /* violet - background */
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+            serif: ['Instrument Serif', 'serif'],
+          },
+        },
+      },
+    };
+  </script>
+
+  <link rel="stylesheet" href="static/css/style.css" />
+</head>
+
+<body class="bg-white text-ink antialiased font-sans">
+
+  <!-- ============================ NAV ============================ -->
+  <nav id="topnav" class="fixed top-0 inset-x-0 z-50 transition-all duration-300">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="#top" class="flex items-center gap-2 font-bold tracking-tight nav-brand">
+        <span class="slot-logo"></span>
+        <span>SlotVTG</span>
+      </a>
+      <div class="hidden md:flex items-center gap-7 text-sm font-medium">
+        <a href="#abstract"   class="nav-link">Abstract</a>
+        <a href="#motivation" class="nav-link">Motivation</a>
+        <a href="#method"     class="nav-link">Method</a>
+        <a href="#results"    class="nav-link">Results</a>
+        <a href="#bibtex"     class="nav-link">BibTeX</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============================ HERO ============================ -->
+  <header id="top" class="hero-section relative overflow-hidden bg-ink text-white">
+    <!-- Background grid + glow (kept behind content) -->
+    <div class="absolute inset-0 hero-bg-grid pointer-events-none -z-10"></div>
+    <div class="absolute inset-0 hero-bg-glow pointer-events-none -z-10"></div>
+
+    <div class="relative z-10 max-w-6xl mx-auto px-6 pt-32 pb-40">
+      <!-- Venue badge -->
+      <div class="flex justify-center mb-6">
+        <span class="venue-badge">
+          <i class="fas fa-star text-amber-300"></i>
+          <span>CVPR 2026 · Denver, Colorado</span>
+        </span>
+      </div>
+
+      <h1 class="text-center font-bold tracking-tight leading-[1.05] text-5xl md:text-7xl">
+        <span class="block">SlotVTG</span>
+        <span class="block mt-3 text-2xl md:text-3xl font-medium text-white/75">
+          Object-Centric Adapter for
+          <span class="hero-grad">Generalizable Video Temporal Grounding</span>
+        </span>
+      </h1>
+
+      <!-- Authors -->
+      <div class="mt-10 text-center">
+        <p class="text-base md:text-lg flex flex-wrap justify-center gap-x-5 gap-y-2">
+          <span><a class="author-link" href="#">Jiwook Han</a><sup class="text-white/60">1*</sup></span>
+          <span><a class="author-link" href="#">Geo Ahn</a><sup class="text-white/60">1*</sup></span>
+          <span><a class="author-link" href="#">Youngrae Kim</a><sup class="text-white/60">2*</sup></span>
+          <span><a class="author-link" href="#">Jinwoo Choi</a><sup class="text-white/60">1†</sup></span>
+        </p>
+        <p class="mt-3 text-sm text-white/60">
+          <sup>1</sup> Kyung Hee University &nbsp;&nbsp;·&nbsp;&nbsp; <sup>2</sup> University of Southern California
+        </p>
+        <p class="mt-1 text-xs text-white/40">
+          <sup>*</sup> Equally contributed first authors &nbsp;·&nbsp; <sup>†</sup> Corresponding author
+        </p>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="mt-10 flex flex-wrap justify-center gap-3">
+        <a href="SlotVTG_camera_ready.pdf" class="btn-pill">
+          <i class="fas fa-file-pdf"></i> Paper
+        </a>
+        <a href="https://arxiv.org/abs/2603.25733" class="btn-pill" target="_blank" rel="noopener">
+          <i class="ai ai-arxiv"></i> arXiv
+        </a>
+        <a href="#" class="btn-pill" aria-disabled="true">
+          <i class="fab fa-github"></i> Code <span class="ml-1 text-[10px] opacity-70">soon</span>
+        </a>
+        <a href="#bibtex" class="btn-pill">
+          <i class="fas fa-quote-right"></i> BibTeX
+        </a>
+      </div>
+
+      <!-- TL;DR pill -->
+      <p class="hero-tldr mt-12 text-center text-white/75 max-w-3xl mx-auto text-base md:text-lg leading-relaxed">
+        Naively fine-tuned MLLMs memorize <span class="line-through decoration-rose-400/70">visual shortcuts</span>.
+        We inject <span class="text-cyan-300 font-semibold">object-centric visual representations</span>
+        through a lightweight <span class="text-amber-300 font-semibold">Slot Adapter</span> —
+        boosting OOD robustness while training only <span class="font-mono text-emerald-300">0.25%</span> of the parameters.
+      </p>
+    </div>
+
+    <!-- Decorative wave — sits BELOW the content so it can never clip text -->
+    <svg class="hero-wave" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true">
+      <path fill="#ffffff" d="M0,70 L0,30 Q360,0 720,20 T1440,30 L1440,70 Z" />
+    </svg>
+  </header>
+
+  <!-- ============================ TEASER ANIMATION ============================ -->
+  <section class="bg-white py-16 md:py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-10">
+        <p class="kicker">our philosophy, animated</p>
+        <h2 class="section-title">Each frame, decomposed into <span class="text-slot1">entity</span>-<span class="text-slot2">level</span> <span class="text-slot3">slots</span> &mdash; <span class="text-slot4">emergently</span>.</h2>
+        <p class="section-sub max-w-3xl mx-auto">
+          Per frame, the Slot Adapter runs iterative slot attention to compress visual tokens into <em>K=4</em>
+          competing slots. We never tell the model which slot should be which &mdash; DINOv2 objectness priors
+          gently nudge the four slots toward semantically coherent regions. The LLM decoder then reasons over the
+          reconstructed entity-aware tokens to produce a temporal window
+          <code class="font-mono text-ink/70">[t<sub>start</sub>, t<sub>end</sub>]</code>.
+        </p>
+      </div>
+
+      <div class="slot-stage">
+        <canvas id="slot-canvas" width="1200" height="600" aria-label="SlotVTG pipeline animation"></canvas>
+
+        <!-- Step labels -->
+        <div class="slot-steps">
+          <div class="step" data-step="1"><span class="step-num">1</span> Video &amp; query</div>
+          <div class="step" data-step="2"><span class="step-num">2</span> Per-frame slot attention</div>
+          <div class="step" data-step="3"><span class="step-num">3</span> Reconstruction</div>
+          <div class="step" data-step="4"><span class="step-num">4</span> LLM &rarr; <code>[t<sub>s</sub>, t<sub>e</sub>]</code></div>
+        </div>
+
+        <!-- Slot legend -->
+        <div class="slot-legend">
+          <span class="legend-dot" style="background:#ff6b6b"></span><span>Slot 1</span>
+          <span class="legend-dot" style="background:#4ecdc4"></span><span>Slot 2</span>
+          <span class="legend-dot" style="background:#ffd93d"></span><span>Slot 3</span>
+          <span class="legend-dot" style="background:#a78bfa"></span><span>Slot 4</span>
+          <span class="legend-note">&middot; assignment is <em>emergent</em>; not labeled</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ ABSTRACT ============================ -->
+  <section id="abstract" class="bg-slate-50 py-20">
+    <div class="max-w-4xl mx-auto px-6">
+      <p class="kicker text-center">Abstract</p>
+      <h2 class="section-title text-center mb-8">Bringing object-centric learning into MLLMs &mdash; cheaply.</h2>
+      <p class="text-lg md:text-xl leading-relaxed text-ink/85">
+        Multimodal Large Language Models (MLLMs) have shown strong performance on Video Temporal Grounding (VTG).
+        However, their coarse recognition capabilities are insufficient for fine-grained temporal understanding,
+        making task-specific fine-tuning indispensable. This fine-tuning causes models to memorize
+        dataset-specific shortcuts rather than faithfully grounding in the actual visual content, leading to poor
+        Out-of-Domain (OOD) generalization. Object-centric learning offers a promising remedy by decomposing scenes
+        into entity-level representations, but existing approaches require re-running the entire multi-stage training
+        pipeline from scratch.
+      </p>
+      <p class="text-lg md:text-xl leading-relaxed text-ink/85 mt-5">
+        We propose <strong>SlotVTG</strong>, a framework that steers MLLMs toward object-centric, input-grounded
+        visual reasoning at minimal cost. SlotVTG introduces a lightweight <em>slot adapter</em> that decomposes
+        visual tokens into abstract slots via slot attention and reconstructs the original sequence, where
+        objectness priors from a self-supervised vision model encourage semantically coherent slot formation.
+        Cross-domain evaluation on standard VTG benchmarks demonstrates that our approach significantly improves
+        OOD robustness while maintaining competitive In-Domain (ID) performance with minimal overhead.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ MOTIVATION ============================ -->
+  <section id="motivation" class="bg-white py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-14">
+        <p class="kicker">The Problem</p>
+        <h2 class="section-title">Fine-tuned MLLMs don't see &mdash; they <span class="line-through decoration-rose-400">memorize</span>.</h2>
+        <p class="section-sub max-w-3xl mx-auto">
+          A naively fine-tuned Qwen2.5-VL-3B drops <span class="font-semibold text-rose-500">31%</span> when moved
+          off-domain. Four diagnostics show why &mdash; and motivate why object-centric decomposition fixes it.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+
+        <div class="diag-card">
+          <div class="diag-tag bg-rose-100 text-rose-700">a</div>
+          <h3 class="diag-title">31% drop on OOD</h3>
+          <p class="diag-body">
+            On Charades-STA &rarr; QVHighlights, R1@0.5 plummets from <span class="font-mono text-ink">63.4 &rarr; 43.6</span>.
+            The model overfits to source-domain patterns.
+          </p>
+          <div class="diag-bar">
+            <div class="diag-bar-fill" style="width:63%; background:linear-gradient(90deg,#4ecdc4,#22c55e)">63.4 ID</div>
+          </div>
+          <div class="diag-bar">
+            <div class="diag-bar-fill" style="width:44%; background:linear-gradient(90deg,#fb7185,#f43f5e)">43.6 OOD</div>
+          </div>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-tag bg-amber-100 text-amber-700">b</div>
+          <h3 class="diag-title">Visual similarity matters</h3>
+          <p class="diag-body">
+            On OOD samples most visually similar to the training set, the model scores
+            <span class="font-mono text-ink">52.8</span>. On the most dissimilar 20%, only
+            <span class="font-mono text-ink">39.1</span> &mdash; performance scales with visual distance.
+          </p>
+          <div class="similarity-track">
+            <div class="dot-similar"></div>
+            <div class="track-line"></div>
+            <div class="dot-dissimilar"></div>
+          </div>
+          <div class="flex justify-between text-xs text-ink/60 mt-1">
+            <span>most similar &middot; 52.8</span>
+            <span>most dissimilar &middot; 39.1</span>
+          </div>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-tag bg-violet-100 text-violet-700">c</div>
+          <h3 class="diag-title">The model ignores visual content on OOD</h3>
+          <p class="diag-body">
+            We perturb either the ground-truth segment or a random segment with Gaussian noise.
+            On ID, GT perturbation causes a much larger drop than random &mdash; the model attends.
+            On OOD, both drops are nearly identical: the model isn't looking.
+          </p>
+          <div class="grid grid-cols-2 gap-3 mt-3">
+            <div class="perturb-cell">
+              <div class="text-xs text-ink/60">ID gap</div>
+              <div class="text-2xl font-bold text-emerald-600">7.8%p</div>
+              <div class="text-xs text-ink/50">17.4 vs 9.6</div>
+            </div>
+            <div class="perturb-cell">
+              <div class="text-xs text-ink/60">OOD gap</div>
+              <div class="text-2xl font-bold text-rose-500">0.5%p</div>
+              <div class="text-xs text-ink/50">12.6 vs 12.1</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="diag-card">
+          <div class="diag-tag bg-emerald-100 text-emerald-700">d</div>
+          <h3 class="diag-title">Slots shrink the domain gap by 49.6%</h3>
+          <p class="diag-body">
+            Maximum Mean Discrepancy between source and target distributions drops from
+            <span class="font-mono text-ink">0.192 &rarr; 0.097</span> when we use slot-based
+            representations &mdash; object-centric decomposition is more transferable.
+          </p>
+          <div class="mmd-bars">
+            <div class="mmd-row">
+              <div class="mmd-label">Naïve MLLM</div>
+              <div class="mmd-bar"><div class="mmd-fill mmd-fill-bad" style="width:100%">0.192</div></div>
+            </div>
+            <div class="mmd-row">
+              <div class="mmd-label">Slot-based</div>
+              <div class="mmd-bar"><div class="mmd-fill mmd-fill-good" style="width:50.5%">0.097</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ METHOD ============================ -->
+  <section id="method" class="bg-ink text-white py-24 relative overflow-hidden">
+    <div class="absolute inset-0 hero-bg-grid opacity-30"></div>
+    <div class="relative max-w-6xl mx-auto px-6">
+      <div class="text-center mb-14">
+        <p class="kicker text-white/60">Approach</p>
+        <h2 class="section-title text-white">A 7.6M-parameter <span class="hero-grad">bottleneck</span>, plugged into the LLM.</h2>
+        <p class="section-sub text-white/70 max-w-3xl mx-auto">
+          SlotVTG has two ingredients: a <strong>Slot Adapter</strong> that decomposes visual tokens into entity-level slots, and a <strong>Slot Alignment Loss</strong> that distills objectness priors from DINOv2 into the slot attention map.
+        </p>
+      </div>
+
+      <!-- Method diagram -->
+      <div class="method-stage">
+        <div class="method-col">
+          <div class="method-label">Visual tokens · per frame</div>
+          <div class="token-grid" id="method-token-grid"></div>
+          <div class="method-caption">N × D &nbsp;<span class="opacity-50">(N = 64)</span></div>
+        </div>
+
+        <div class="method-arrow">&rarr;</div>
+
+        <div class="method-col">
+          <div class="method-label">Down projection</div>
+          <div class="bottleneck"></div>
+          <div class="method-caption font-mono">d = 512</div>
+        </div>
+
+        <div class="method-arrow">&rarr;</div>
+
+        <div class="method-col">
+          <div class="method-label">Slot attention</div>
+          <div class="slot-orbs">
+            <span class="orb" style="--c:#ff6b6b; --d:0s"></span>
+            <span class="orb" style="--c:#4ecdc4; --d:.3s"></span>
+            <span class="orb" style="--c:#ffd93d; --d:.6s"></span>
+            <span class="orb" style="--c:#a78bfa; --d:.9s"></span>
+          </div>
+          <div class="method-caption font-mono">K = 4, I = 3 iters</div>
+        </div>
+
+        <div class="method-arrow">&rarr;</div>
+
+        <div class="method-col">
+          <div class="method-label">Reconstruction</div>
+          <div class="token-grid" id="method-recon-grid"></div>
+          <div class="method-caption">entity-aware tokens<br /><span class="opacity-50">passed back to LLM</span></div>
+        </div>
+      </div>
+
+      <!-- Task-level pipeline strip: shows where the Slot Adapter sits inside the VTG pipeline -->
+      <div class="task-pipeline">
+        <div class="task-pipe-item">
+          <i class="fas fa-video task-pipe-icon" style="color:#ffd93d"></i>
+          <div class="task-pipe-title">Untrimmed video</div>
+          <div class="task-pipe-sub">T uniformly sampled frames</div>
+        </div>
+        <div class="task-pipe-arrow">&rarr;</div>
+        <div class="task-pipe-item">
+          <i class="fas fa-keyboard task-pipe-icon" style="color:#a78bfa"></i>
+          <div class="task-pipe-title">Natural-language query</div>
+          <div class="task-pipe-sub">"During which time does …"</div>
+        </div>
+        <div class="task-pipe-arrow">&rarr;</div>
+        <div class="task-pipe-item task-pipe-ours">
+          <i class="fas fa-puzzle-piece task-pipe-icon" style="color:#4ecdc4"></i>
+          <div class="task-pipe-title">Slot Adapter (per frame)</div>
+          <div class="task-pipe-sub">decoder layers 1&ndash;7</div>
+        </div>
+        <div class="task-pipe-arrow">&rarr;</div>
+        <div class="task-pipe-item">
+          <i class="fas fa-brain task-pipe-icon" style="color:#ff6b6b"></i>
+          <div class="task-pipe-title">LLM decoder (LoRA)</div>
+          <div class="task-pipe-sub">autoregressive temporal reasoning</div>
+        </div>
+        <div class="task-pipe-arrow">&rarr;</div>
+        <div class="task-pipe-item">
+          <i class="fas fa-stopwatch task-pipe-icon" style="color:#34d399"></i>
+          <div class="task-pipe-title font-mono">[t<sub>start</sub>, t<sub>end</sub>]</div>
+          <div class="task-pipe-sub">generated as text tokens</div>
+        </div>
+      </div>
+
+      <!-- Two-column explanation -->
+      <div class="grid md:grid-cols-2 gap-8 mt-16">
+        <div class="method-card">
+          <h3 class="method-title">
+            <span class="method-num">01</span> Slot Adapter
+          </h3>
+          <p class="method-body">
+            Inserted only in the <strong>early decoder layers (1–7)</strong>, the adapter projects visual tokens into a
+            <span class="font-mono">d=512</span> bottleneck, runs <span class="font-mono">I=3</span> iterations of slot attention with
+            <span class="font-mono">K=4</span> learnable slots, then reconstructs the original token sequence via cross-attention.
+            A zero-initialized up-projection makes the adapter an identity at the start of training &mdash; training stays stable while
+            representations gradually become entity-level.
+          </p>
+        </div>
+        <div class="method-card">
+          <h3 class="method-title">
+            <span class="method-num">02</span> Slot Alignment Loss
+          </h3>
+          <p class="method-body">
+            Without supervision, slots may form arbitrary clusters. We align the
+            token-pair similarity derived from slot attention weights with a
+            <strong>DINOv2-derived affinity matrix</strong>, distilling objectness priors:
+          </p>
+          <pre class="method-eq">L<sub>SA</sub> = 1 − ⟨ cos(M<sub>slot</sub>), M<sub>DINO</sub>) ⟩</pre>
+          <p class="method-body">
+            Combined with the standard cross-entropy:
+            <span class="font-mono whitespace-nowrap">L<sub>total</sub> = L<sub>CE</sub> + λ · L<sub>SA</sub></span>
+            with λ&nbsp;=&nbsp;0.1.
+          </p>
+        </div>
+      </div>
+
+      <!-- Param efficiency callout -->
+      <div class="param-callout">
+        <div>
+          <div class="text-xs uppercase tracking-widest text-white/60">Trainable params (3B)</div>
+          <div class="text-4xl font-bold text-emerald-300">7.6 M</div>
+          <div class="text-sm text-white/60 font-mono">0.25% of total</div>
+        </div>
+        <div class="param-divider"></div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-white/60">Trainable params (7B)</div>
+          <div class="text-4xl font-bold text-emerald-300">23.3 M</div>
+          <div class="text-sm text-white/60 font-mono">0.33% of total</div>
+        </div>
+        <div class="param-divider"></div>
+        <div>
+          <div class="text-xs uppercase tracking-widest text-white/60">Backbone</div>
+          <div class="text-xl font-bold">Qwen2.5-VL</div>
+          <div class="text-sm text-white/60">vision encoder <strong>frozen</strong></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ WHAT DO SLOTS LEARN ============================ -->
+  <section class="bg-slate-50 py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <p class="kicker">Slot Visualization</p>
+        <h2 class="section-title">What do the slots actually learn?</h2>
+        <p class="section-sub max-w-3xl mx-auto">
+          Across both ID (Charades-STA) and OOD (QVHighlights, ActivityNet) samples, the slots decompose scenes
+          into semantically coherent regions <em>without any domain-specific supervision</em> &mdash; and crucially,
+          the slot&ndash;to&ndash;entity correspondence is <em>emergent</em>: which slot captures which entity is
+          decided by the data, not by us. The decomposition generalizes across domains.
+        </p>
+      </div>
+
+      <div class="slot-vis-grid">
+        <div class="vis-row">
+          <div class="vis-cell vis-label">Cha. <span class="text-xs text-ink/50">(ID)</span></div>
+          <div class="vis-cell vis-frame" data-scene="indoor"></div>
+          <div class="vis-cell vis-slot" data-slot="1"></div>
+          <div class="vis-cell vis-slot" data-slot="2"></div>
+          <div class="vis-cell vis-slot" data-slot="3"></div>
+          <div class="vis-cell vis-slot" data-slot="4"></div>
+        </div>
+        <div class="vis-row">
+          <div class="vis-cell vis-label">QVH. <span class="text-xs text-ink/50">(OOD)</span></div>
+          <div class="vis-cell vis-frame" data-scene="outdoor"></div>
+          <div class="vis-cell vis-slot" data-slot="1"></div>
+          <div class="vis-cell vis-slot" data-slot="2"></div>
+          <div class="vis-cell vis-slot" data-slot="3"></div>
+          <div class="vis-cell vis-slot" data-slot="4"></div>
+        </div>
+        <div class="vis-row">
+          <div class="vis-cell vis-label">ANet <span class="text-xs text-ink/50">(OOD)</span></div>
+          <div class="vis-cell vis-frame" data-scene="sport"></div>
+          <div class="vis-cell vis-slot" data-slot="1"></div>
+          <div class="vis-cell vis-slot" data-slot="2"></div>
+          <div class="vis-cell vis-slot" data-slot="3"></div>
+          <div class="vis-cell vis-slot" data-slot="4"></div>
+        </div>
+        <div class="vis-row vis-header">
+          <div class="vis-cell"></div>
+          <div class="vis-cell">Frame</div>
+          <div class="vis-cell" style="color:#ff6b6b">Slot 1</div>
+          <div class="vis-cell" style="color:#4ecdc4">Slot 2</div>
+          <div class="vis-cell" style="color:#ffd93d">Slot 3</div>
+          <div class="vis-cell" style="color:#a78bfa">Slot 4</div>
+        </div>
+      </div>
+
+      <p class="text-center mt-8 text-sm text-ink/55 italic">
+        Procedural rendering &mdash; replace with the actual <code>static/figures/slot_vis_*.png</code> when ready.
+        Note: the specific slot&ndash;to&ndash;entity mapping varies across frames and is <em>not enforced</em> by training.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ RESULTS ============================ -->
+  <section id="results" class="bg-white py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-12">
+        <p class="kicker">Cross-Domain Results</p>
+        <h2 class="section-title">Consistent OOD gains. Preserved ID performance.</h2>
+        <p class="section-sub max-w-3xl mx-auto">
+          Compared against the strong Chrono-Qwen baseline, SlotVTG improves OOD R1@0.5 by up to
+          <span class="font-semibold text-emerald-600">+4.3</span> while staying on par with ID accuracy &mdash;
+          all with a <span class="font-mono">0.25%</span>-parameter adapter.
+        </p>
+      </div>
+
+      <!-- Highlight cards -->
+      <div class="grid md:grid-cols-3 gap-5 mb-14">
+        <div class="result-card">
+          <div class="result-source">Charades-STA &rarr; QVHighlights (3B)</div>
+          <div class="result-delta">+4.3</div>
+          <div class="result-meta">R1@0.5 OOD &middot; 43.6 &rarr; 47.9</div>
+        </div>
+        <div class="result-card">
+          <div class="result-source">Charades-STA &rarr; ActivityNet (7B)</div>
+          <div class="result-delta">+4.0</div>
+          <div class="result-meta">R1@0.5 OOD &middot; 29.2 &rarr; 33.2</div>
+        </div>
+        <div class="result-card">
+          <div class="result-source">Charades-STA ID (7B)</div>
+          <div class="result-delta result-delta-neutral">+0.4</div>
+          <div class="result-meta">R1@0.3 ID &middot; 79.1 &rarr; 79.5</div>
+        </div>
+      </div>
+
+      <!-- Full table -->
+      <div class="overflow-x-auto">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th rowspan="2">Source &rarr; Target</th>
+              <th rowspan="2">LLM</th>
+              <th rowspan="2">Method</th>
+              <th colspan="2">Charades-STA</th>
+              <th colspan="2">ActivityNet-Cap.</th>
+              <th colspan="2">QVHighlights</th>
+            </tr>
+            <tr>
+              <th>R1@0.5</th><th>mIoU</th>
+              <th>R1@0.5</th><th>mIoU</th>
+              <th>R1@0.5</th><th>mIoU</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td rowspan="4">Cha. &rarr; *</td><td>3B</td><td>Chrono-Qwen</td><td>63.4</td><td>55.2</td><td>26.3</td><td>30.1</td><td>43.6</td><td>42.7</td></tr>
+            <tr class="row-ours"><td>3B</td><td><strong>SlotVTG</strong></td><td>64.0</td><td>55.4</td><td><strong>28.7</strong></td><td><strong>32.2</strong></td><td><strong>47.9</strong></td><td><strong>45.0</strong></td></tr>
+            <tr><td>7B</td><td>Chrono-Qwen</td><td>67.8</td><td>58.1</td><td>29.2</td><td>32.6</td><td>53.5</td><td>49.0</td></tr>
+            <tr class="row-ours"><td>7B</td><td><strong>SlotVTG</strong></td><td>67.6</td><td><strong>58.3</strong></td><td><strong>33.2</strong></td><td><strong>35.5</strong></td><td><strong>57.6</strong></td><td><strong>51.3</strong></td></tr>
+
+            <tr><td rowspan="4">QVH. &rarr; *</td><td>3B</td><td>Chrono-Qwen</td><td>45.7</td><td>45.7</td><td>35.3</td><td>39.2</td><td>79.1</td><td>71.7</td></tr>
+            <tr class="row-ours"><td>3B</td><td><strong>SlotVTG</strong></td><td><strong>46.6</strong></td><td><strong>46.1</strong></td><td><strong>35.7</strong></td><td><strong>40.0</strong></td><td><strong>79.5</strong></td><td>71.7</td></tr>
+            <tr><td>7B</td><td>Chrono-Qwen</td><td>53.3</td><td>49.9</td><td>41.4</td><td>43.4</td><td>81.8</td><td>74.9</td></tr>
+            <tr class="row-ours"><td>7B</td><td><strong>SlotVTG</strong></td><td><strong>53.7</strong></td><td><strong>50.4</strong></td><td><strong>42.0</strong></td><td><strong>44.1</strong></td><td><strong>82.9</strong></td><td><strong>76.0</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-xs text-ink/55 italic mt-4 text-center">
+        Bold: best within each source &rarr; target &middot; LLM size group. Full table with R1@0.3 and R1@0.7 in the paper.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============================ BIBTEX ============================ -->
+  <section id="bibtex" class="bg-slate-50 py-20">
+    <div class="max-w-4xl mx-auto px-6">
+      <div class="text-center mb-8">
+        <p class="kicker">If you find this useful</p>
+        <h2 class="section-title">Cite SlotVTG</h2>
+      </div>
+
+      <div class="bibtex-card">
+        <button class="bibtex-copy" onclick="copyBibtex(this)" aria-label="Copy BibTeX">
+          <i class="fas fa-copy"></i> Copy
+        </button>
+        <pre id="bibtex-block">@inproceedings{han2026slotvtg,
+  title     = {SlotVTG: Object-Centric Adapter for Generalizable Video Temporal Grounding},
+  author    = {Han, Jiwook and Ahn, Geo and Kim, Youngrae and Choi, Jinwoo},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  year      = {2026}
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ FOOTER ============================ -->
+  <footer class="bg-ink text-white/70 py-12">
+    <div class="max-w-6xl mx-auto px-6 text-sm">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <div class="text-white font-semibold">SlotVTG</div>
+          <div>Visual Learning Lab @ Kyung Hee University &middot; CVPR 2026</div>
+        </div>
+        <div class="text-xs text-white/50">
+          Page template adapted from <a class="underline hover:text-white" href="https://nerfies.github.io/">Nerfies</a>.
+          Animations crafted for this project. <br />
+          Licensed under <a class="underline hover:text-white" href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="static/js/slot-animation.js"></script>
+  <script src="static/js/main.js"></script>
+</body>
+</html>

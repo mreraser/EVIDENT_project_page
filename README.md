@@ -2,8 +2,9 @@
 
 Static site for **SlotVTG: Object-Centric Adapter for Generalizable Video Temporal Grounding** (CVPR 2026).
 
-This page is designed to be hosted on **GitHub Pages**. Drop the repo at
-`https://github.com/<your-org>/slotvtg-page` and enable Pages from the `main` branch.
+This repo ships with a custom GitHub Actions workflow that deploys the static
+site to GitHub Pages *without* going through Jekyll &mdash; faster and more
+reliable than the default branch-based deploy.
 
 ## Local preview
 
@@ -16,7 +17,30 @@ python3 -m http.server 8000
 ```
 
 Or just open `index.html` in a browser. (Some browsers block local font/CDN
-fetches via `file://` — the `http.server` approach is safer.)
+fetches via `file://` &mdash; the `http.server` approach is safer.)
+
+## Deploying to GitHub Pages
+
+1. Push this repo to GitHub (`main` branch).
+2. **Repo &rarr; Settings &rarr; Pages &rarr; Build and deployment**:
+   - **Source**: choose **"GitHub Actions"** (not "Deploy from a branch").
+3. The included `.github/workflows/pages.yml` workflow will run automatically.
+4. After the workflow finishes (~30s), your site is live at
+   `https://<your-username>.github.io/<repo-name>/`.
+
+### Why a custom workflow?
+
+The default "Deploy from a branch" option triggers `actions/jekyll-build-pages`,
+which sometimes fails with a transient
+`codeload.github.com … could not be found` error and is unnecessary for a plain
+static site. The included `pages.yml` skips Jekyll entirely (the `.nojekyll`
+marker file also signals this) and uses
+`actions/upload-pages-artifact` + `actions/deploy-pages` directly.
+
+### Re-running a failed deploy
+
+If a deploy fails (transient network issue), open the Actions tab on GitHub,
+click the failed run, and hit **"Re-run all jobs"**. No code change needed.
 
 ## Structure
 

@@ -267,6 +267,68 @@
 
 })();
 
+// ---- Lightbox: click any .zoomable image to open it fullscreen. ----
+// Works on desktop (click + ESC/×/backdrop to close) and mobile
+// (tap + tap-outside/X to close; pinch-zoom via touch-action: pinch-zoom).
+(function () {
+  const lightbox = document.getElementById('lightbox');
+  if (!lightbox) return;
+  const lbImg   = lightbox.querySelector('.lightbox-img');
+  const lbClose = lightbox.querySelector('.lightbox-close');
+
+  function open(src, alt) {
+    lbImg.src = src;
+    lbImg.alt = alt || '';
+    lightbox.classList.add('open');
+    lightbox.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+  function close() {
+    lightbox.classList.remove('open');
+    lightbox.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    // small delay so the fade-out doesn't flash the next src
+    setTimeout(() => { if (!lightbox.classList.contains('open')) lbImg.src = ''; }, 250);
+  }
+
+  // Bind click handler on every zoomable image (incl. those added later)
+  function bind(el) {
+    el.addEventListener('click', () => open(el.currentSrc || el.src, el.alt));
+  }
+  document.querySelectorAll('img.zoomable').forEach(bind);
+
+  // Close on click outside the image OR on the close button
+  lightbox.addEventListener('click', (e) => {
+    if (e.target === lightbox || e.target === lbClose) close();
+  });
+  // ESC key closes
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && lightbox.classList.contains('open')) close();
+  });
+})();
+
+// ---- IntersectionObserver: add .in-view to .reveal-on-scroll elements ----
+// Used by the observation figure (left-to-right wipe + staggered captions),
+// the mainfigure (fade-up), and any future reveal-on-scroll elements.
+(function () {
+  const targets = document.querySelectorAll('.reveal-on-scroll');
+  if (!targets.length) return;
+  if (!('IntersectionObserver' in window)) {
+    // Fallback: just reveal everything
+    targets.forEach(el => el.classList.add('in-view'));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.25, rootMargin: '0px 0px -60px 0px' });
+  targets.forEach(el => io.observe(el));
+})();
+
 // ---- tiny CSS keyframe injection for method-stage cell fade-in ----
 (function injectKF() {
   const css = `@keyframes fade-in { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }`;

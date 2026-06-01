@@ -11,8 +11,12 @@
 
   <!-- Open Graph -->
   <meta property="og:title" content="SlotVTG — Object-Centric Adapter for Generalizable VTG" />
-  <meta property="og:description" content="Injecting object-centric visual representations into pre-trained MLLMs for robust video temporal grounding — at minimal cost. CVPR 2026." />
+  <meta property="og:description" content="Injecting object-centric visual representations into pre-trained MLLMs for robust video temporal grounding — at minimal cost. CVPR 2026 GRAIL Workshop." />
   <meta property="og:type" content="website" />
+
+  <!-- Favicon — SlotVTG 4-slot color quadrant -->
+  <link rel="icon" type="image/svg+xml" href="static/figures/favicon.svg" />
+  <link rel="alternate icon" type="image/png" href="static/figures/favicon.svg" />
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -78,10 +82,11 @@
     <div class="relative z-10 max-w-6xl mx-auto px-6 pt-32 pb-40">
       <!-- Venue badge -->
       <div class="flex justify-center mb-6">
-        <span class="venue-badge">
+        <a href="https://grailworkshops.github.io/" target="_blank" rel="noopener" class="venue-badge venue-badge-link">
           <i class="fas fa-star text-amber-300"></i>
-          <span>CVPR 2026 · Denver, Colorado</span>
-        </span>
+          <span>CVPR 2026 &middot; GRAIL Workshop &middot; Denver, Colorado</span>
+          <i class="fas fa-arrow-up-right-from-square text-[10px] opacity-60"></i>
+        </a>
       </div>
 
       <h1 class="text-center font-bold tracking-tight leading-[1.05] text-5xl md:text-7xl">
@@ -95,10 +100,10 @@
       <!-- Authors -->
       <div class="mt-10 text-center">
         <p class="text-base md:text-lg flex flex-wrap justify-center gap-x-5 gap-y-2">
-          <span><a class="author-link" href="#">Jiwook Han</a><sup class="text-white/60">1*</sup></span>
-          <span><a class="author-link" href="#">Geo Ahn</a><sup class="text-white/60">1*</sup></span>
-          <span><a class="author-link" href="#">Youngrae Kim</a><sup class="text-white/60">2*</sup></span>
-          <span><a class="author-link" href="#">Jinwoo Choi</a><sup class="text-white/60">1†</sup></span>
+          <span><a class="author-link" href="https://www.linkedin.com/in/jiwookhan" target="_blank" rel="noopener">Jiwook Han</a><sup class="text-white/60">1*</sup></span>
+          <span><a class="author-link" href="https://www.linkedin.com/in/geo-ahn/" target="_blank" rel="noopener">Geo Ahn</a><sup class="text-white/60">1*</sup></span>
+          <span><a class="author-link" href="https://www.linkedin.com/in/youngrae-kim-360391187/" target="_blank" rel="noopener">Youngrae Kim</a><sup class="text-white/60">2*</sup></span>
+          <span><a class="author-link" href="https://www.linkedin.com/in/jinwoo-choi-36056795/" target="_blank" rel="noopener">Jinwoo Choi</a><sup class="text-white/60">1†</sup></span>
         </p>
         <p class="mt-3 text-sm text-white/60">
           <sup>1</sup> Kyung Hee University &nbsp;&nbsp;·&nbsp;&nbsp; <sup>2</sup> University of Southern California
@@ -119,6 +124,9 @@
         <a href="#" class="btn-pill" aria-disabled="true">
           <i class="fab fa-github"></i> Code <span class="ml-1 text-[10px] opacity-70">soon</span>
         </a>
+        <a href="https://grailworkshops.github.io/" class="btn-pill" target="_blank" rel="noopener">
+          <i class="fas fa-people-group"></i> Workshop
+        </a>
         <a href="#bibtex" class="btn-pill">
           <i class="fas fa-quote-right"></i> BibTeX
         </a>
@@ -126,7 +134,7 @@
 
       <!-- TL;DR pill -->
       <p class="hero-tldr mt-12 text-center text-white/75 max-w-3xl mx-auto text-base md:text-lg leading-relaxed">
-        Naively fine-tuned MLLMs memorize <span class="line-through decoration-rose-400/70">visual shortcuts</span>.
+        Naïvely fine-tuned MLLMs memorize <span class="text-rose-300 font-semibold">visual shortcuts</span>.
         We inject <span class="text-cyan-300 font-semibold">object-centric visual representations</span>
         through a lightweight <span class="text-amber-300 font-semibold">Slot Adapter</span> —
         boosting OOD robustness while training only <span class="font-mono text-emerald-300">0.25%</span> of the parameters.
@@ -157,12 +165,15 @@
       <div class="slot-stage">
         <canvas id="slot-canvas" width="1200" height="600" aria-label="SlotVTG pipeline animation"></canvas>
 
-        <!-- Step labels -->
-        <div class="slot-steps">
+        <!-- Step labels — five pills, one per pipeline stage. Splitting Reconstruction
+             and Residual makes it clear that the adapter's output is ADDED back to
+             the token stream rather than replacing it. -->
+        <div class="slot-steps slot-steps-5">
           <div class="step" data-step="1"><span class="step-num">1</span> Video &amp; query</div>
-          <div class="step" data-step="2"><span class="step-num">2</span> Per-frame slot attention</div>
+          <div class="step" data-step="2"><span class="step-num">2</span> Slot attention</div>
           <div class="step" data-step="3"><span class="step-num">3</span> Reconstruction</div>
-          <div class="step" data-step="4"><span class="step-num">4</span> LLM &rarr; <code>[t<sub>s</sub>, t<sub>e</sub>]</code></div>
+          <div class="step" data-step="4"><span class="step-num">4</span> Residual addition</div>
+          <div class="step" data-step="5"><span class="step-num">5</span> LLM &rarr; <code>[t<sub>s</sub>, t<sub>e</sub>]</code></div>
         </div>
 
         <!-- Slot legend -->
@@ -183,21 +194,17 @@
       <p class="kicker text-center">Abstract</p>
       <h2 class="section-title text-center mb-8">Bringing object-centric learning into MLLMs &mdash; cheaply.</h2>
       <p class="text-lg md:text-xl leading-relaxed text-ink/85">
-        Multimodal Large Language Models (MLLMs) have shown strong performance on Video Temporal Grounding (VTG).
-        However, their coarse recognition capabilities are insufficient for fine-grained temporal understanding,
-        making task-specific fine-tuning indispensable. This fine-tuning causes models to memorize
-        dataset-specific shortcuts rather than faithfully grounding in the actual visual content, leading to poor
-        Out-of-Domain (OOD) generalization. Object-centric learning offers a promising remedy by decomposing scenes
-        into entity-level representations, but existing approaches require re-running the entire multi-stage training
-        pipeline from scratch.
+        Fine-tuning MLLMs for Video Temporal Grounding (VTG) makes them memorize dataset-specific shortcuts rather
+        than ground in actual visual content, hurting Out-of-Domain (OOD) generalization. Object-centric learning
+        is a promising fix, but existing approaches require re-running the full vision–language alignment and
+        instruction-tuning pipeline from scratch.
       </p>
       <p class="text-lg md:text-xl leading-relaxed text-ink/85 mt-5">
-        We propose <strong>SlotVTG</strong>, a framework that steers MLLMs toward object-centric, input-grounded
-        visual reasoning at minimal cost. SlotVTG introduces a lightweight <em>slot adapter</em> that decomposes
-        visual tokens into abstract slots via slot attention and reconstructs the original sequence, where
-        objectness priors from a self-supervised vision model encourage semantically coherent slot formation.
-        Cross-domain evaluation on standard VTG benchmarks demonstrates that our approach significantly improves
-        OOD robustness while maintaining competitive In-Domain (ID) performance with minimal overhead.
+        <strong>SlotVTG</strong> is a lightweight <em>slot adapter</em> that plugs into a pre-trained MLLM and
+        residually adds entity-level structure: it decomposes visual tokens into slots via slot attention, then
+        reconstructs the original sequence. A Slot Alignment loss distills objectness priors from DINOv2 into the
+        slot attention map. Cross-domain evaluation shows consistent OOD gains while preserving In-Domain accuracy
+        &mdash; with only <span class="font-mono">0.25%</span> trainable parameters.
       </p>
     </div>
   </section>
@@ -205,93 +212,39 @@
   <!-- ============================ MOTIVATION ============================ -->
   <section id="motivation" class="bg-white py-24">
     <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-14">
+      <div class="text-center mb-12">
         <p class="kicker">The Problem</p>
-        <h2 class="section-title">Fine-tuned MLLMs don't see &mdash; they <span class="line-through decoration-rose-400">memorize</span>.</h2>
+        <h2 class="section-title">Fine-tuned MLLMs don't see &mdash; they <span class="text-rose-500">memorize</span>.</h2>
         <p class="section-sub max-w-3xl mx-auto">
-          A naively fine-tuned Qwen2.5-VL-3B drops <span class="font-semibold text-rose-500">31%</span> when moved
-          off-domain. Four diagnostics show why &mdash; and motivate why object-centric decomposition fixes it.
+          A naïvely fine-tuned Qwen2.5-VL-3B drops <span class="font-semibold text-rose-500">31%</span> off-domain.
+          Four diagnostics tell us why &mdash; and why object-centric decomposition fixes it.
         </p>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-6">
+      <!-- The actual diagnostic figure from the paper, revealed left-to-right
+           so each of the four panels appears in sequence (mimics bars growing). -->
+      <figure class="observation-wrap reveal-on-scroll">
+        <img src="static/figures/observation.png" alt="Four diagnostic observations: (a) ID vs OOD gap, (b) visual similarity, (c) noise perturbation, (d) MMD comparison" class="observation-figure zoomable" />
+      </figure>
 
-        <div class="diag-card">
-          <div class="diag-tag bg-rose-100 text-rose-700">a</div>
-          <h3 class="diag-title">31% drop on OOD</h3>
-          <p class="diag-body">
-            On Charades-STA &rarr; QVHighlights, R1@0.5 plummets from <span class="font-mono text-ink">63.4 &rarr; 43.6</span>.
-            The model overfits to source-domain patterns.
-          </p>
-          <div class="diag-bar">
-            <div class="diag-bar-fill" style="width:63%; background:linear-gradient(90deg,#4ecdc4,#22c55e)">63.4 ID</div>
-          </div>
-          <div class="diag-bar">
-            <div class="diag-bar-fill" style="width:44%; background:linear-gradient(90deg,#fb7185,#f43f5e)">43.6 OOD</div>
-          </div>
+      <!-- Brief one-line takeaways below the figure, staggered fade-in -->
+      <div class="observation-captions reveal-on-scroll">
+        <div class="obs-cap" data-letter="a">
+          <strong>OOD performance drops 31%.</strong>
+          R1@0.5 on Cha. &rarr; QVH falls <span class="font-mono">63.4 &rarr; 43.6</span>.
         </div>
-
-        <div class="diag-card">
-          <div class="diag-tag bg-amber-100 text-amber-700">b</div>
-          <h3 class="diag-title">Visual similarity matters</h3>
-          <p class="diag-body">
-            On OOD samples most visually similar to the training set, the model scores
-            <span class="font-mono text-ink">52.8</span>. On the most dissimilar 20%, only
-            <span class="font-mono text-ink">39.1</span> &mdash; performance scales with visual distance.
-          </p>
-          <div class="similarity-track">
-            <div class="dot-similar"></div>
-            <div class="track-line"></div>
-            <div class="dot-dissimilar"></div>
-          </div>
-          <div class="flex justify-between text-xs text-ink/60 mt-1">
-            <span>most similar &middot; 52.8</span>
-            <span>most dissimilar &middot; 39.1</span>
-          </div>
+        <div class="obs-cap" data-letter="b">
+          <strong>The drop tracks visual distance.</strong>
+          Most-similar OOD: 52.8; most-dissimilar: 39.1.
         </div>
-
-        <div class="diag-card">
-          <div class="diag-tag bg-violet-100 text-violet-700">c</div>
-          <h3 class="diag-title">The model ignores visual content on OOD</h3>
-          <p class="diag-body">
-            We perturb either the ground-truth segment or a random segment with Gaussian noise.
-            On ID, GT perturbation causes a much larger drop than random &mdash; the model attends.
-            On OOD, both drops are nearly identical: the model isn't looking.
-          </p>
-          <div class="grid grid-cols-2 gap-3 mt-3">
-            <div class="perturb-cell">
-              <div class="text-xs text-ink/60">ID gap</div>
-              <div class="text-2xl font-bold text-emerald-600">7.8%p</div>
-              <div class="text-xs text-ink/50">17.4 vs 9.6</div>
-            </div>
-            <div class="perturb-cell">
-              <div class="text-xs text-ink/60">OOD gap</div>
-              <div class="text-2xl font-bold text-rose-500">0.5%p</div>
-              <div class="text-xs text-ink/50">12.6 vs 12.1</div>
-            </div>
-          </div>
+        <div class="obs-cap" data-letter="c">
+          <strong>The model stops looking.</strong>
+          On OOD, perturbing the GT segment vs. a random one yields nearly the same drop (gap = 0.5%p).
         </div>
-
-        <div class="diag-card">
-          <div class="diag-tag bg-emerald-100 text-emerald-700">d</div>
-          <h3 class="diag-title">Slots shrink the domain gap by 49.6%</h3>
-          <p class="diag-body">
-            Maximum Mean Discrepancy between source and target distributions drops from
-            <span class="font-mono text-ink">0.192 &rarr; 0.097</span> when we use slot-based
-            representations &mdash; object-centric decomposition is more transferable.
-          </p>
-          <div class="mmd-bars">
-            <div class="mmd-row">
-              <div class="mmd-label">Naïve MLLM</div>
-              <div class="mmd-bar"><div class="mmd-fill mmd-fill-bad" style="width:100%">0.192</div></div>
-            </div>
-            <div class="mmd-row">
-              <div class="mmd-label">Slot-based</div>
-              <div class="mmd-bar"><div class="mmd-fill mmd-fill-good" style="width:50.5%">0.097</div></div>
-            </div>
-          </div>
+        <div class="obs-cap" data-letter="d">
+          <strong>Slots shrink the gap by 49.6%.</strong>
+          Source&ndash;target MMD: 0.192 &rarr; 0.097.
         </div>
-
       </div>
     </div>
   </section>
@@ -308,20 +261,13 @@
         </p>
       </div>
 
-      <!-- Method diagram -->
-      <div class="method-stage">
+      <!-- Stylized method diagram — 3 cols (down-projection step elided since it
+           is implicit; the full pipeline figure follows immediately below). -->
+      <div class="method-stage method-stage-3col">
         <div class="method-col">
           <div class="method-label">Visual tokens · per frame</div>
           <div class="token-grid" id="method-token-grid"></div>
           <div class="method-caption">N × D &nbsp;<span class="opacity-50">(N = 64)</span></div>
-        </div>
-
-        <div class="method-arrow">&rarr;</div>
-
-        <div class="method-col">
-          <div class="method-label">Down projection</div>
-          <div class="bottleneck"></div>
-          <div class="method-caption font-mono">d = 512</div>
         </div>
 
         <div class="method-arrow">&rarr;</div>
@@ -342,95 +288,20 @@
         <div class="method-col">
           <div class="method-label">Reconstruction</div>
           <div class="token-grid" id="method-recon-grid"></div>
-          <div class="method-caption">entity-aware tokens<br /><span class="opacity-50">passed back to LLM</span></div>
+          <div class="method-caption">entity-aware tokens<br /><span class="opacity-50">residual + back to LLM</span></div>
         </div>
       </div>
 
-      <!-- Task-level pipeline strip: shows where the Slot Adapter sits inside the VTG pipeline -->
-      <div class="task-pipeline">
-        <div class="task-pipe-item">
-          <i class="fas fa-video task-pipe-icon" style="color:#ffd93d"></i>
-          <div class="task-pipe-title">Untrimmed video</div>
-          <div class="task-pipe-sub">T uniformly sampled frames</div>
-        </div>
-        <div class="task-pipe-arrow">&rarr;</div>
-        <div class="task-pipe-item">
-          <i class="fas fa-keyboard task-pipe-icon" style="color:#a78bfa"></i>
-          <div class="task-pipe-title">Natural-language query</div>
-          <div class="task-pipe-sub">"During which time does …"</div>
-        </div>
-        <div class="task-pipe-arrow">&rarr;</div>
-        <div class="task-pipe-item task-pipe-ours">
-          <i class="fas fa-puzzle-piece task-pipe-icon" style="color:#4ecdc4"></i>
-          <div class="task-pipe-title">Slot Adapter (per frame)</div>
-          <div class="task-pipe-sub">decoder layers 1&ndash;7</div>
-        </div>
-        <div class="task-pipe-arrow">&rarr;</div>
-        <div class="task-pipe-item">
-          <i class="fas fa-brain task-pipe-icon" style="color:#ff6b6b"></i>
-          <div class="task-pipe-title">LLM decoder (LoRA)</div>
-          <div class="task-pipe-sub">autoregressive temporal reasoning</div>
-        </div>
-        <div class="task-pipe-arrow">&rarr;</div>
-        <div class="task-pipe-item">
-          <i class="fas fa-stopwatch task-pipe-icon" style="color:#34d399"></i>
-          <div class="task-pipe-title font-mono">[t<sub>start</sub>, t<sub>end</sub>]</div>
-          <div class="task-pipe-sub">generated as text tokens</div>
-        </div>
-      </div>
+      <!-- Full pipeline figure from the paper. Reveals on scroll. -->
+      <figure class="mainfigure-wrap reveal-on-scroll">
+        <img src="static/figures/mainfigure.png" alt="SlotVTG full pipeline. (a) Overview of the adapter inserted into early LLM-decoder layers. (b) Slot Alignment Loss that aligns slot-attention similarity with DINOv2 affinity." class="mainfigure-img zoomable" />
+        <figcaption class="mainfigure-cap">
+          <strong>Fig. 3 from the paper.</strong>
+          (a) Slot Adapter is inserted into the early LLM-decoder layers and adds residually to the token stream.
+          (b) Slot Alignment Loss aligns slot-attention similarity with DINOv2 affinity.
+        </figcaption>
+      </figure>
 
-      <!-- Two-column explanation -->
-      <div class="grid md:grid-cols-2 gap-8 mt-16">
-        <div class="method-card">
-          <h3 class="method-title">
-            <span class="method-num">01</span> Slot Adapter
-          </h3>
-          <p class="method-body">
-            Inserted only in the <strong>early decoder layers (1–7)</strong>, the adapter projects visual tokens into a
-            <span class="font-mono">d=512</span> bottleneck, runs <span class="font-mono">I=3</span> iterations of slot attention with
-            <span class="font-mono">K=4</span> learnable slots, then reconstructs the original token sequence via cross-attention.
-            A zero-initialized up-projection makes the adapter an identity at the start of training &mdash; training stays stable while
-            representations gradually become entity-level.
-          </p>
-        </div>
-        <div class="method-card">
-          <h3 class="method-title">
-            <span class="method-num">02</span> Slot Alignment Loss
-          </h3>
-          <p class="method-body">
-            Without supervision, slots may form arbitrary clusters. We align the
-            token-pair similarity derived from slot attention weights with a
-            <strong>DINOv2-derived affinity matrix</strong>, distilling objectness priors:
-          </p>
-          <pre class="method-eq">L<sub>SA</sub> = 1 − ⟨ cos(M<sub>slot</sub>), M<sub>DINO</sub>) ⟩</pre>
-          <p class="method-body">
-            Combined with the standard cross-entropy:
-            <span class="font-mono whitespace-nowrap">L<sub>total</sub> = L<sub>CE</sub> + λ · L<sub>SA</sub></span>
-            with λ&nbsp;=&nbsp;0.1.
-          </p>
-        </div>
-      </div>
-
-      <!-- Param efficiency callout -->
-      <div class="param-callout">
-        <div>
-          <div class="text-xs uppercase tracking-widest text-white/60">Trainable params (3B)</div>
-          <div class="text-4xl font-bold text-emerald-300">7.6 M</div>
-          <div class="text-sm text-white/60 font-mono">0.25% of total</div>
-        </div>
-        <div class="param-divider"></div>
-        <div>
-          <div class="text-xs uppercase tracking-widest text-white/60">Trainable params (7B)</div>
-          <div class="text-4xl font-bold text-emerald-300">23.3 M</div>
-          <div class="text-sm text-white/60 font-mono">0.33% of total</div>
-        </div>
-        <div class="param-divider"></div>
-        <div>
-          <div class="text-xs uppercase tracking-widest text-white/60">Backbone</div>
-          <div class="text-xl font-bold">Qwen2.5-VL</div>
-          <div class="text-sm text-white/60">vision encoder <strong>frozen</strong></div>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -440,53 +311,35 @@
       <div class="text-center mb-12">
         <p class="kicker">Slot Visualization</p>
         <h2 class="section-title">What do the slots actually learn?</h2>
-        <p class="section-sub max-w-3xl mx-auto">
-          Across both ID (Charades-STA) and OOD (QVHighlights, ActivityNet) samples, the slots decompose scenes
-          into semantically coherent regions <em>without any domain-specific supervision</em> &mdash; and crucially,
-          the slot&ndash;to&ndash;entity correspondence is <em>emergent</em>: which slot captures which entity is
-          decided by the data, not by us. The decomposition generalizes across domains.
-        </p>
       </div>
 
-      <div class="slot-vis-grid">
-        <div class="vis-row">
-          <div class="vis-cell vis-label">Cha. <span class="text-xs text-ink/50">(ID)</span></div>
-          <div class="vis-cell vis-frame" data-scene="indoor"></div>
-          <div class="vis-cell vis-slot" data-slot="1"></div>
-          <div class="vis-cell vis-slot" data-slot="2"></div>
-          <div class="vis-cell vis-slot" data-slot="3"></div>
-          <div class="vis-cell vis-slot" data-slot="4"></div>
-        </div>
-        <div class="vis-row">
-          <div class="vis-cell vis-label">QVH. <span class="text-xs text-ink/50">(OOD)</span></div>
-          <div class="vis-cell vis-frame" data-scene="outdoor"></div>
-          <div class="vis-cell vis-slot" data-slot="1"></div>
-          <div class="vis-cell vis-slot" data-slot="2"></div>
-          <div class="vis-cell vis-slot" data-slot="3"></div>
-          <div class="vis-cell vis-slot" data-slot="4"></div>
-        </div>
-        <div class="vis-row">
-          <div class="vis-cell vis-label">ANet <span class="text-xs text-ink/50">(OOD)</span></div>
-          <div class="vis-cell vis-frame" data-scene="sport"></div>
-          <div class="vis-cell vis-slot" data-slot="1"></div>
-          <div class="vis-cell vis-slot" data-slot="2"></div>
-          <div class="vis-cell vis-slot" data-slot="3"></div>
-          <div class="vis-cell vis-slot" data-slot="4"></div>
-        </div>
-        <div class="vis-row vis-header">
-          <div class="vis-cell"></div>
-          <div class="vis-cell">Frame</div>
-          <div class="vis-cell" style="color:#ff6b6b">Slot 1</div>
-          <div class="vis-cell" style="color:#4ecdc4">Slot 2</div>
-          <div class="vis-cell" style="color:#ffd93d">Slot 3</div>
-          <div class="vis-cell" style="color:#a78bfa">Slot 4</div>
+      <!-- Portrait figure on one side + explanatory text on the other so the
+           paper-style 2-column figure doesn't leave huge whitespace on a wide page. -->
+      <div class="slotviz-layout">
+        <figure class="slotviz-fig reveal-on-scroll">
+          <img src="static/figures/slotviz.png" alt="Slot visualization across Charades-STA (ID), QVHighlights (OOD), and ActivityNet (OOD) samples. Each row shows the original frame and the four slot masks." class="zoomable" />
+          <figcaption>
+            Fig. 4 from the paper &middot; each frame is masked by its highest-attending slot
+            for one Cha. (ID), QVH (OOD), and ANet (OOD) sample.
+          </figcaption>
+        </figure>
+
+        <div class="slotviz-text">
+          <h3 class="slotviz-h">Decomposition generalizes &mdash; <em>without</em> any domain-specific supervision.</h3>
+          <p class="slotviz-p">
+            We visualize the slot attention maps by <strong>masking each frame region with its
+            highest-attending slot</strong>. Across both <strong>In-Domain</strong> (Charades-STA) and
+            <strong>Out-of-Domain</strong> (QVHighlights, ActivityNet) samples, the slots decompose
+            scenes into semantically coherent regions &mdash; people, objects, and backgrounds &mdash;
+            though the specific slot&ndash;to&ndash;entity mapping varies across frames.
+          </p>
+          <p class="slotviz-p">
+            Importantly, this decomposition generalizes to <strong>unseen domains</strong> (QVH., ANet)
+            without any domain-specific supervision, confirming that the Slot Adapter learns
+            <em>transferable entity-level representations</em> rather than dataset-specific patterns.
+          </p>
         </div>
       </div>
-
-      <p class="text-center mt-8 text-sm text-ink/55 italic">
-        Procedural rendering &mdash; replace with the actual <code>static/figures/slot_vis_*.png</code> when ready.
-        Note: the specific slot&ndash;to&ndash;entity mapping varies across frames and is <em>not enforced</em> by training.
-      </p>
     </div>
   </section>
 
@@ -503,58 +356,148 @@
         </p>
       </div>
 
-      <!-- Highlight cards -->
-      <div class="grid md:grid-cols-3 gap-5 mb-14">
+      <!-- Highlight cards (OOD-focused) -->
+      <div class="grid md:grid-cols-2 gap-5 mb-14 max-w-4xl mx-auto">
         <div class="result-card">
-          <div class="result-source">Charades-STA &rarr; QVHighlights (3B)</div>
+          <div class="result-source">Charades-STA, source &middot; 3B</div>
           <div class="result-delta">+4.3</div>
-          <div class="result-meta">R1@0.5 OOD &middot; 43.6 &rarr; 47.9</div>
+          <div class="result-meta">R1@0.5 on QVHighlights &middot; 43.6 &rarr; 47.9</div>
         </div>
         <div class="result-card">
-          <div class="result-source">Charades-STA &rarr; ActivityNet (7B)</div>
+          <div class="result-source">Charades-STA, source &middot; 7B</div>
           <div class="result-delta">+4.0</div>
-          <div class="result-meta">R1@0.5 OOD &middot; 29.2 &rarr; 33.2</div>
-        </div>
-        <div class="result-card">
-          <div class="result-source">Charades-STA ID (7B)</div>
-          <div class="result-delta result-delta-neutral">+0.4</div>
-          <div class="result-meta">R1@0.3 ID &middot; 79.1 &rarr; 79.5</div>
+          <div class="result-meta">R1@0.5 on ActivityNet &middot; 29.2 &rarr; 33.2</div>
         </div>
       </div>
 
-      <!-- Full table -->
+      <!-- Full Table 1 from the paper — Zero-shot + DETR-based + MLLM-based methods. -->
       <div class="overflow-x-auto">
-        <table class="results-table">
+        <table class="results-table results-table-full">
           <thead>
             <tr>
-              <th rowspan="2">Source &rarr; Target</th>
-              <th rowspan="2">LLM</th>
-              <th rowspan="2">Method</th>
-              <th colspan="2">Charades-STA</th>
-              <th colspan="2">ActivityNet-Cap.</th>
-              <th colspan="2">QVHighlights</th>
+              <th rowspan="3">Source<br/>Dataset</th>
+              <th rowspan="3">LLM</th>
+              <th rowspan="3">Method</th>
+              <th colspan="12" class="target-group">Target Dataset</th>
             </tr>
             <tr>
-              <th>R1@0.5</th><th>mIoU</th>
-              <th>R1@0.5</th><th>mIoU</th>
-              <th>R1@0.5</th><th>mIoU</th>
+              <th colspan="4">Charades-STA</th>
+              <th colspan="4">ActivityNet</th>
+              <th colspan="4">QVHighlights</th>
+            </tr>
+            <tr>
+              <th>R1@0.3</th><th>R1@0.5</th><th>R1@0.7</th><th>mIoU</th>
+              <th>R1@0.3</th><th>R1@0.5</th><th>R1@0.7</th><th>mIoU</th>
+              <th>R1@0.3</th><th>R1@0.5</th><th>R1@0.7</th><th>mIoU</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td rowspan="4">Cha. &rarr; *</td><td>3B</td><td>Chrono-Qwen</td><td>63.4</td><td>55.2</td><td>26.3</td><td>30.1</td><td>43.6</td><td>42.7</td></tr>
-            <tr class="row-ours"><td>3B</td><td><strong>SlotVTG</strong></td><td>64.0</td><td>55.4</td><td><strong>28.7</strong></td><td><strong>32.2</strong></td><td><strong>47.9</strong></td><td><strong>45.0</strong></td></tr>
-            <tr><td>7B</td><td>Chrono-Qwen</td><td>67.8</td><td>58.1</td><td>29.2</td><td>32.6</td><td>53.5</td><td>49.0</td></tr>
-            <tr class="row-ours"><td>7B</td><td><strong>SlotVTG</strong></td><td>67.6</td><td><strong>58.3</strong></td><td><strong>33.2</strong></td><td><strong>35.5</strong></td><td><strong>57.6</strong></td><td><strong>51.3</strong></td></tr>
+            <!-- ===== Zero-Shot ===== -->
+            <tr class="group-head"><td rowspan="5" class="src-cell">Zero-Shot</td><td>7B</td><td>HawkEye</td>
+              <td>50.6</td><td>31.4</td><td>14.5</td><td>33.7</td>
+              <td>49.1</td><td>29.3</td><td>10.7</td><td>32.7</td>
+              <td class="na">&ndash;</td><td class="na">&ndash;</td><td class="na">&ndash;</td><td class="na">&ndash;</td>
+            </tr>
+            <tr><td>7B</td><td>TimeSuite</td>
+              <td>69.9</td><td>48.7</td><td>24.0</td><td class="na">&ndash;</td>
+              <td class="na">&ndash;</td><td>16.6</td><td>9.3</td><td>22.0</td>
+              <td class="na">&ndash;</td><td>12.3</td><td>9.2</td><td>21.3</td>
+            </tr>
+            <tr><td>7B</td><td>UniTime</td>
+              <td class="na">&ndash;</td><td>59.1</td><td>31.9</td><td>52.2</td>
+              <td class="na">&ndash;</td><td>22.8</td><td>14.1</td><td>27.3</td>
+              <td class="na">&ndash;</td><td>41.0</td><td>31.5</td><td>43.7</td>
+            </tr>
+            <tr><td>2B</td><td>VideoMind</td>
+              <td>67.6</td><td>51.1</td><td>26.0</td><td>45.2</td>
+              <td>44.0</td><td>26.5</td><td>12.6</td><td>30.1</td>
+              <td class="na">&ndash;</td><td class="na">&ndash;</td><td class="na">&ndash;</td><td class="na">&ndash;</td>
+            </tr>
+            <tr><td>7B</td><td>VideoMind</td>
+              <td>73.5</td><td>59.1</td><td>31.2</td><td>50.2</td>
+              <td>48.4</td><td>30.3</td><td>15.7</td><td>33.3</td>
+              <td class="na">&ndash;</td><td class="na">&ndash;</td><td class="na">&ndash;</td><td class="na">&ndash;</td>
+            </tr>
 
-            <tr><td rowspan="4">QVH. &rarr; *</td><td>3B</td><td>Chrono-Qwen</td><td>45.7</td><td>45.7</td><td>35.3</td><td>39.2</td><td>79.1</td><td>71.7</td></tr>
-            <tr class="row-ours"><td>3B</td><td><strong>SlotVTG</strong></td><td><strong>46.6</strong></td><td><strong>46.1</strong></td><td><strong>35.7</strong></td><td><strong>40.0</strong></td><td><strong>79.5</strong></td><td>71.7</td></tr>
-            <tr><td>7B</td><td>Chrono-Qwen</td><td>53.3</td><td>49.9</td><td>41.4</td><td>43.4</td><td>81.8</td><td>74.9</td></tr>
-            <tr class="row-ours"><td>7B</td><td><strong>SlotVTG</strong></td><td><strong>53.7</strong></td><td><strong>50.4</strong></td><td><strong>42.0</strong></td><td><strong>44.1</strong></td><td><strong>82.9</strong></td><td><strong>76.0</strong></td></tr>
+            <!-- ===== Source: Charades-STA ===== -->
+            <tr class="group-head"><td rowspan="7" class="src-cell">Charades-STA</td><td class="na">&ndash;</td><td>EaTR</td>
+              <td>67.7</td><td>55.2</td><td>33.1</td><td>47.7</td>
+              <td>36.9</td><td>18.8</td><td>7.3</td><td>24.1</td>
+              <td>31.7</td><td>17.0</td><td>6.4</td><td>21.5</td>
+            </tr>
+            <tr><td class="na">&ndash;</td><td>CG-DETR</td>
+              <td>69.7</td><td>57.6</td><td>35.1</td><td>49.5</td>
+              <td>32.6</td><td>16.8</td><td>6.8</td><td>22.1</td>
+              <td>37.4</td><td>22.8</td><td>10.5</td><td>25.2</td>
+            </tr>
+            <tr><td>4B</td><td>Chrono-BLIP</td>
+              <td>77.5</td><td><strong>68.8</strong></td><td><strong>48.5</strong></td><td>57.2</td>
+              <td>41.8</td><td>22.4</td><td>9.7</td><td>27.7</td>
+              <td>66.6</td><td>43.9</td><td>23.7</td><td>43.9</td>
+            </tr>
+            <tr><td>3B</td><td>Chrono-Qwen</td>
+              <td>77.2</td><td>63.4</td><td>40.3</td><td>55.2</td>
+              <td>44.4</td><td>26.3</td><td>13.1</td><td>30.1</td>
+              <td>63.3</td><td>43.6</td><td>23.3</td><td>42.7</td>
+            </tr>
+            <tr class="row-ours"><td>3B</td><td><strong>SlotVTG (Ours)</strong></td>
+              <td>77.2</td><td><strong>64.0</strong></td><td><strong>41.2</strong></td><td><strong>55.4</strong></td>
+              <td><strong>47.7</strong></td><td><strong>28.7</strong></td><td><strong>14.4</strong></td><td><strong>32.2</strong></td>
+              <td><strong>66.0</strong></td><td><strong>47.9</strong></td><td><strong>26.2</strong></td><td><strong>45.0</strong></td>
+            </tr>
+            <tr><td>7B</td><td>Chrono-Qwen</td>
+              <td>79.1</td><td><strong>67.8</strong></td><td><strong>46.9</strong></td><td>58.1</td>
+              <td>46.5</td><td>29.2</td><td>14.6</td><td>32.6</td>
+              <td>70.3</td><td>53.5</td><td>29.6</td><td>49.0</td>
+            </tr>
+            <tr class="row-ours"><td>7B</td><td><strong>SlotVTG (Ours)</strong></td>
+              <td><strong>79.5</strong></td><td>67.6</td><td>46.7</td><td><strong>58.3</strong></td>
+              <td><strong>52.0</strong></td><td><strong>33.2</strong></td><td><strong>16.7</strong></td><td><strong>35.5</strong></td>
+              <td><strong>74.0</strong></td><td><strong>57.6</strong></td><td><strong>32.2</strong></td><td><strong>51.3</strong></td>
+            </tr>
+
+            <!-- ===== Source: QVHighlights ===== -->
+            <tr class="group-head"><td rowspan="7" class="src-cell">QVHighlights</td><td class="na">&ndash;</td><td>EaTR</td>
+              <td>40.8</td><td>27.2</td><td>13.0</td><td>28.0</td>
+              <td>36.7</td><td>20.9</td><td>9.7</td><td>25.3</td>
+              <td>70.3</td><td>59.6</td><td>40.3</td><td>53.1</td>
+            </tr>
+            <tr><td class="na">&ndash;</td><td>CG-DETR</td>
+              <td>42.8</td><td>25.5</td><td>12.2</td><td>28.5</td>
+              <td>37.7</td><td>21.5</td><td>10.4</td><td>26.0</td>
+              <td>77.5</td><td>65.6</td><td>52.1</td><td>61.3</td>
+            </tr>
+            <tr><td>4B</td><td>Chrono-BLIP</td>
+              <td>61.5</td><td>37.0</td><td>19.8</td><td>41.4</td>
+              <td>41.8</td><td>22.4</td><td>9.7</td><td>27.7</td>
+              <td>86.1</td><td>76.8</td><td>62.8</td><td>70.8</td>
+            </tr>
+            <tr><td>3B</td><td>Chrono-Qwen</td>
+              <td>70.6</td><td>45.7</td><td>21.8</td><td>45.7</td>
+              <td>55.2</td><td>35.3</td><td>20.8</td><td>39.2</td>
+              <td>87.6</td><td>79.1</td><td><strong>64.8</strong></td><td>71.7</td>
+            </tr>
+            <tr class="row-ours"><td>3B</td><td><strong>SlotVTG (Ours)</strong></td>
+              <td><strong>70.7</strong></td><td><strong>46.6</strong></td><td><strong>22.6</strong></td><td><strong>46.1</strong></td>
+              <td><strong>56.1</strong></td><td><strong>35.7</strong></td><td><strong>21.1</strong></td><td><strong>40.0</strong></td>
+              <td>87.3</td><td><strong>79.5</strong></td><td>64.6</td><td>71.7</td>
+            </tr>
+            <tr><td>7B</td><td>Chrono-Qwen</td>
+              <td>75.2</td><td>53.3</td><td>27.4</td><td>49.9</td>
+              <td>60.7</td><td>41.4</td><td>24.8</td><td>43.4</td>
+              <td>90.7</td><td>81.8</td><td>67.6</td><td>74.9</td>
+            </tr>
+            <tr class="row-ours"><td>7B</td><td><strong>SlotVTG (Ours)</strong></td>
+              <td><strong>76.0</strong></td><td><strong>53.7</strong></td><td><strong>28.2</strong></td><td><strong>50.4</strong></td>
+              <td><strong>61.7</strong></td><td><strong>42.0</strong></td><td><strong>25.3</strong></td><td><strong>44.1</strong></td>
+              <td><strong>91.3</strong></td><td><strong>82.9</strong></td><td><strong>69.3</strong></td><td><strong>76.0</strong></td>
+            </tr>
           </tbody>
         </table>
       </div>
       <p class="text-xs text-ink/55 italic mt-4 text-center">
-        Bold: best within each source &rarr; target &middot; LLM size group. Full table with R1@0.3 and R1@0.7 in the paper.
+        Bold: best within each (source &middot; LLM size) group on each target. DETR-based methods (EaTR, CG-DETR)
+        use pre-extracted CLIP + SlowFast features at 0.5 fps. Zero-shot rows are reference numbers without source fine-tuning.
       </p>
     </div>
   </section>
@@ -572,9 +515,9 @@
           <i class="fas fa-copy"></i> Copy
         </button>
         <pre id="bibtex-block">@inproceedings{han2026slotvtg,
-  title     = {SlotVTG: Object-Centric Adapter for Generalizable Video Temporal Grounding},
+  title     = {{SlotVTG}: Object-Centric Adapter for Generalizable Video Temporal Grounding},
   author    = {Han, Jiwook and Ahn, Geo and Kim, Youngrae and Choi, Jinwoo},
-  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  booktitle = {CVPR 2026 Workshop on Grounded Retrieval and Agentic Intelligence for Vision-Language (GRAIL-V)},
   year      = {2026}
 }</pre>
       </div>
@@ -587,7 +530,7 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div class="text-white font-semibold">SlotVTG</div>
-          <div>Visual Learning Lab @ Kyung Hee University &middot; CVPR 2026</div>
+          <div><a class="footer-link" href="https://vll.khu.ac.kr/" target="_blank" rel="noopener">Vision and Learning Lab</a> @ Kyung Hee University &middot; CVPR 2026 GRAIL Workshop</div>
         </div>
         <div class="text-xs text-white/50">
           Page template adapted from <a class="underline hover:text-white" href="https://nerfies.github.io/">Nerfies</a>.
@@ -597,6 +540,12 @@
       </div>
     </div>
   </footer>
+
+  <!-- Lightbox overlay (figures open here on click) -->
+  <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Image viewer">
+    <button class="lightbox-close" type="button" aria-label="Close">&times;</button>
+    <img class="lightbox-img" alt="" />
+  </div>
 
   <script src="static/js/slot-animation.js"></script>
   <script src="static/js/main.js"></script>

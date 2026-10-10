@@ -1,5 +1,5 @@
 /* =========================================================
-   EVIDENT — main interactions
+   EVIDENT: main interactions
    - Nav scroll state
    - BibTeX copy button
    - Method-stage token grid generators (32 random tokens each side)
@@ -48,7 +48,7 @@
         // Plain monochrome tokens (the "raw" visual tokens going in)
         cell.style.background = `rgba(255, 255, 255, ${0.12 + 0.18 * Math.random()})`;
       } else if (mode === 'entity') {
-        // Entity-aware tokens — colored by deterministic slot map
+        // Entity-aware tokens - colored by deterministic slot map
         const c = i % 8, r = Math.floor(i / 8);
         let slot = 3; // default background
         if (c >= 1 && c <= 3 && r >= 2 && r <= 5) slot = 0; // person
@@ -233,7 +233,7 @@
   }
 
   function findScene(el) {
-    // both vis-frame and vis-slot need a scene — vis-slot inherits from parent row's vis-frame
+    // both vis-frame and vis-slot need a scene - vis-slot inherits from parent row's vis-frame
     if (el.classList.contains('vis-frame')) return el;
     // find sibling vis-frame in the same row (vis-row uses display:contents so query manually)
     const row = el.closest('.vis-row');
@@ -337,30 +337,65 @@
   document.head.appendChild(style);
 })();
 
-// ---- Accessible tabs (analysis + results) ----
+// ---- Figure spotlight: link (a)(b)(c) caption cards to the matching figure panel ----
+// Hover/focus/click a card (or hover a panel) to spotlight it; while the figure is on
+// screen and untouched, the spotlight steps through a -> b -> c on its own.
 (function () {
-  document.querySelectorAll('[data-tabs]').forEach((root) => {
-    const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
-    const select = (tab) => {
-      tabs.forEach((t) => {
-        const on = t === tab;
-        t.setAttribute('aria-selected', on);
-        t.tabIndex = on ? 0 : -1;
-        const panel = document.getElementById(t.getAttribute('aria-controls'));
-        panel.hidden = !on;
-        // panels hidden at load never fired the scroll reveal
-        if (on) panel.querySelectorAll('.reveal-on-scroll').forEach((el) => el.classList.add('in-view'));
-      });
-    };
-    tabs.forEach((t, i) => {
-      t.addEventListener('click', () => select(t));
-      t.addEventListener('keydown', (e) => {
-        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-        if (!d) return;
-        const next = tabs[(i + d + tabs.length) % tabs.length];
-        next.focus();
-        select(next);
-      });
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('figure[data-spot]').forEach((fig) => {
+    const img = fig.querySelector('img');
+    const caps = document.querySelector(`[data-spot-for="${fig.dataset.spot}"]`);
+    if (!img || !caps) return;
+    const cards = Array.from(caps.querySelectorAll('.obs-cap'));
+    const splits = fig.dataset.splits.split(',').map(Number);
+
+    // overlay sits exactly on the image
+    const stage = document.createElement('div');
+    stage.className = 'spot-stage';
+    img.parentNode.insertBefore(stage, img);
+    stage.appendChild(img);
+    const veils = splits.slice(0, -1).map((x, i) => {
+      const v = document.createElement('div');
+      v.className = 'spot-veil';
+      v.style.left = `${x}%`;
+      v.style.width = `${splits[i + 1] - x}%`;
+      stage.appendChild(v);
+      return v;
     });
+    const ring = document.createElement('div');
+    ring.className = 'spot-ring';
+    stage.appendChild(ring);
+
+    let active = -1, timer = null, holdUntil = 0, onScreen = false;
+    function set(i) {
+      caps.classList.add('revealed');            // entrance stagger is over; react instantly from now on
+      active = i;
+      fig.classList.toggle('spotting', i >= 0);
+      veils.forEach((v, k) => v.classList.toggle('dim', i >= 0 && k !== i));
+      if (i >= 0) { ring.style.left = `${splits[i]}%`; ring.style.width = `${splits[i + 1] - splits[i]}%`; }
+      cards.forEach((c, k) => { c.classList.toggle('active', k === i); c.classList.toggle('muted', i >= 0 && k !== i); c.setAttribute('aria-pressed', String(k === i)); });
+    }
+    const touch = () => { holdUntil = performance.now() + 9000; };
+    function tick() {
+      clearTimeout(timer);
+      if (reduce || !onScreen) return;
+      if (performance.now() >= holdUntil) set((active + 1) % cards.length);
+      timer = setTimeout(tick, 4200);
+    }
+    cards.forEach((c, k) => {
+      c.addEventListener('mouseenter', () => { touch(); set(k); });
+      c.addEventListener('focus', () => { touch(); set(k); });
+      c.addEventListener('click', () => { touch(); set(k); });
+      c.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); touch(); set(k); } });
+    });
+    stage.addEventListener('mousemove', (e) => {
+      const r = stage.getBoundingClientRect(), pct = (e.clientX - r.left) / r.width * 100;
+      const k = splits.findIndex((x, i) => i < splits.length - 1 && pct >= x && pct < splits[i + 1]);
+      if (k >= 0 && k !== active) { touch(); set(k); }
+    });
+    new IntersectionObserver(([e]) => {
+      onScreen = e.isIntersecting;
+      if (onScreen) timer = setTimeout(tick, active < 0 ? 2400 : 4200); else clearTimeout(timer);
+    }, { threshold: 0.55 }).observe(fig);
   });
 })();

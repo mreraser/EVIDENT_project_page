@@ -10,11 +10,11 @@
   <meta name="author" content="Geo Ahn, Jiwook Han, Youngrae Kim, Joonseok Lee, Jinwoo Choi" />
 
   <!-- Open Graph -->
-  <meta property="og:title" content="EVIDENT — Entity-Grounded Visual Evidence for Cross-Domain VTG" />
+  <meta property="og:title" content="EVIDENT: Entity-Grounded Visual Evidence for Cross-Domain VTG" />
   <meta property="og:description" content="Routing MLLM adaptation through entity-grounded visual evidence for robust cross-domain video temporal grounding. NeurIPS 2026." />
   <meta property="og:type" content="website" />
 
-  <!-- Favicon — 4-slot color quadrant -->
+  <!-- Favicon: 4-slot color quadrant -->
   <link rel="icon" type="image/svg+xml" href="static/figures/favicon.svg" />
   <link rel="alternate icon" type="image/png" href="static/figures/favicon.svg" />
 
@@ -64,7 +64,7 @@
         <span>EVIDENT</span>
       </a>
       <div class="hidden md:flex items-center gap-7 text-sm font-medium">
-        <a href="#abstract"   class="nav-link">Abstract</a>
+        <a href="#tldr"       class="nav-link">TL;DR</a>
         <a href="#motivation" class="nav-link">Analysis</a>
         <a href="#method"     class="nav-link">Method</a>
         <a href="#results"    class="nav-link">Results</a>
@@ -91,7 +91,7 @@
         <span class="block hero-title"><span class="hand-part hand-evid">EVID<svg class="hand-bracket" viewBox="0 0 100 18" preserveAspectRatio="none" aria-hidden="true"><path d="M2.5,2.5 C3.5,10 7,13.5 16,13.8 C38,14.6 62,13.2 84,14.1 C93,14.4 97,10.5 97.8,3.2"/></svg><span class="hand-note" aria-hidden="true">evidence</span></span><span class="hand-part hand-ent">ENT<svg class="hand-bracket" viewBox="0 0 100 18" preserveAspectRatio="none" aria-hidden="true"><path d="M3,3.5 C4.2,10.5 8,13.2 18,13.6 C42,14.4 60,13.9 82,13.4 C92,13.2 96.4,9.8 97,2.6"/></svg><span class="hand-note" aria-hidden="true">entity</span></span></span>
         <span class="block mt-3 text-2xl md:text-3xl font-medium text-white/75">
           Routing MLLM Adaptation through
-          <span class="hero-grad">Entity-Grounded Visual Evidence</span>
+          <span class="hero-grad">Entity-Grounded Visual Evidence</span><br class="hidden md:block" />
           for Cross-Domain Video Temporal Grounding
         </span>
       </h1>
@@ -132,13 +132,30 @@
         </a>
       </div>
 
-      <!-- TL;DR -->
-      <p class="hero-tldr mt-12 text-center text-white/75 max-w-3xl mx-auto text-base md:text-lg leading-relaxed">
-        Naïvely fine-tuned MLLMs <span class="text-rose-300 font-semibold">stop looking</span> under visual domain shift.
-        EVIDENT routes adaptation through <span class="text-cyan-300 font-semibold">entity-level slots</span>
-        and grounds each prediction in <span class="text-amber-300 font-semibold">query-relevant visual evidence</span> &mdash;
-        up to <span class="font-mono text-emerald-300">+7.2</span> OOD R1@0.7 over a LoRA-tuned Qwen2.5-VL-7B.
-      </p>
+      <!-- Key points, one per line -->
+      <p id="tldr" class="tldr-kicker mt-12">TL;DR</p>
+      <ul class="hero-points mt-4">
+        <li><span class="hp-tag hp-problem">Problem</span><span>Naïvely fine-tuned MLLMs <strong>stop looking</strong> at the video under visual domain shift.</span></li>
+        <li><span class="hp-tag hp-idea">Idea</span><span>Route adaptation through <strong>entity-level slots</strong> instead of dense visual tokens.</span></li>
+        <li><span class="hp-tag hp-evidence">Evidence</span><span>Ground each prediction in frames where the <strong>query&rsquo;s entities</strong> actually appear.</span></li>
+        <li><span class="hp-tag hp-result">Result</span><span>Up to <strong>+7.2</strong> OOD R1@0.7 over LoRA-tuned Qwen2.5-VL-7B, training only <strong>2.42%</strong> of parameters.</span></li>
+      </ul>
+      <details class="hero-abstract">
+        <summary>Read the full abstract</summary>
+        <p>
+          Fine-tuning MLLMs for Video Temporal Grounding (VTG) often improves in-domain performance but degrades
+          sharply under domain shift. We find that this failure is primarily driven not just by unseen query concepts,
+          but by <em>visual domain shift</em>, which prevents the model from coupling its learned temporal localization
+          knowledge with its inherent entity-attention capability. We introduce <strong>EVIDENT</strong>, a
+          parameter-efficient adaptation framework that anchors temporal grounding in the inherent entity-attention of
+          pre-trained MLLMs by routing VTG adaptation through <em>explicit visual entity evidence</em>: (i) an Entity
+          Bottleneck Adapter that transforms dense visual tokens into compact entity-level slots, (ii) an Entity-Binding
+          Distillation loss that instills objectness priors into the MLLM visual space, and (iii) an Entity-to-eVidence
+          gating mechanism that steers the model to localize moments containing query-relevant entities. Experiments on
+          cross-domain VTG benchmarks show that EVIDENT consistently improves out-of-domain robustness while preserving
+          competitive in-domain performance with modest parameter overhead.
+        </p>
+      </details>
     </div>
 
     <svg class="hero-wave" viewBox="0 0 1440 70" preserveAspectRatio="none" aria-hidden="true">
@@ -149,64 +166,16 @@
   <!-- ============================ PIPELINE ANIMATION ============================ -->
   <section class="bg-white py-12 md:py-16">
     <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-10">
-        <p class="kicker">Our idea, animated</p>
-        <h2 class="section-title">Each frame, decomposed into <span class="text-slot1">entity</span>-<span class="text-slot2">level</span> <span class="text-slot3">slots</span> &mdash; <span class="text-slot4">emergently</span>.</h2>
-        <p class="section-sub max-w-3xl mx-auto">
-          Per frame, the EB Adapter runs iterative slot attention to compress visual tokens into <em>K=4</em>
-          competing slots. We never tell the model which slot should be which &mdash; DINOv2 objectness priors
-          guide the four slots toward semantically coherent regions. The gated, entity-aware tokens are added back
-          to the token stream, and the LLM decoder produces a temporal window
-          <code class="font-mono text-ink/70">[t<sub>start</sub>, t<sub>end</sub>]</code>.
-        </p>
+      <div class="text-center mb-8">
+        <p class="kicker">How EVIDENT works</p>
+        <h2 class="section-title">Find the entities, then find the moment.</h2>
       </div>
 
-      <div class="slot-stage">
-        <canvas id="slot-canvas" width="1200" height="600" aria-label="EVIDENT EB Adapter pipeline animation"></canvas>
-
-        <div class="slot-steps slot-steps-5">
-          <div class="step" data-step="1"><span class="step-num">1</span> Video &amp; query</div>
-          <div class="step" data-step="2"><span class="step-num">2</span> Slot attention</div>
-          <div class="step" data-step="3"><span class="step-num">3</span> Reconstruction</div>
-          <div class="step" data-step="4"><span class="step-num">4</span> Residual addition</div>
-          <div class="step" data-step="5"><span class="step-num">5</span> LLM &rarr; <code>[t<sub>s</sub>, t<sub>e</sub>]</code></div>
-        </div>
-
-        <div class="slot-legend">
-          <span class="legend-dot" style="background:#ff6b6b"></span><span>Slot 1</span>
-          <span class="legend-dot" style="background:#4ecdc4"></span><span>Slot 2</span>
-          <span class="legend-dot" style="background:#ffd93d"></span><span>Slot 3</span>
-          <span class="legend-dot" style="background:#a78bfa"></span><span>Slot 4</span>
-          <span class="legend-note">&middot; assignment is <em>emergent</em>; not labeled</span>
-        </div>
+      <div class="ev-stage">
+        <p id="ev-caption" class="ev-caption" aria-live="polite"><span class="ev-cap-num"></span><span class="ev-cap-text"></span></p>
+        <div id="ev-anim" class="ev-anim"></div>
+        <ol id="ev-steps" class="ev-steps" aria-label="Animation steps"></ol>
       </div>
-    </div>
-  </section>
-
-  <!-- ============================ ABSTRACT ============================ -->
-  <section id="abstract" class="bg-slate-50 py-16">
-    <div class="max-w-4xl mx-auto px-6">
-      <p class="kicker text-center">Abstract</p>
-      <h2 class="section-title text-center mb-8">Ground the timestamp in the entities, not the scene.</h2>
-      <p class="text-lg md:text-xl leading-relaxed text-ink/85">
-        Fine-tuning MLLMs for Video Temporal Grounding (VTG) often improves in-domain performance but degrades
-        sharply under domain shift. We find that this failure is primarily driven not just by unseen query concepts,
-        but by <em>visual domain shift</em>, which prevents the model from coupling its learned temporal localization
-        knowledge with its inherent entity-attention capability.
-      </p>
-      <p class="text-lg md:text-xl leading-relaxed text-ink/85 mt-5">
-        We introduce <strong>EVIDENT</strong>, a parameter-efficient adaptation framework that anchors temporal grounding
-        in the inherent entity-attention of pre-trained MLLMs by routing VTG adaptation through
-        <em>explicit visual entity evidence</em>. EVIDENT consists of three components:
-        (i) an <strong>Entity Bottleneck Adapter</strong> that transforms dense visual tokens into compact entity-level slots,
-        (ii) an <strong>Entity-Binding Distillation</strong> loss that instills objectness priors into the semantically
-        unstructured MLLM visual space, and (iii) an <strong>Entity-to-eVidence gating</strong> mechanism that steers the
-        model to localize moments containing query-relevant entities.
-      </p>
-      <p class="text-lg md:text-xl leading-relaxed text-ink/85 mt-5">
-        Experiments on cross-domain VTG benchmarks show that EVIDENT consistently improves out-of-domain robustness
-        while preserving competitive in-domain performance with modest parameter overhead.
-      </p>
     </div>
   </section>
 
@@ -217,8 +186,8 @@
         <p class="kicker">At a glance</p>
         <h2 class="section-title">Same query. New domain. <span class="text-rose-500">Who</span> is still looking?</h2>
         <p class="section-sub max-w-3xl mx-auto">
-          A naïvely fine-tuned MLLM localizes the moment on its training domain, but on an unseen domain it
-          responds indiscriminately to memorized scene context and predicts the whole video.
+          A naïvely fine-tuned MLLM localizes the moment on its training domain, but on an unseen domain
+          it gets the moment wrong.
           EVIDENT learns an <em>entity-centric</em> representation that consistently captures both
           <span class="font-semibold text-emerald-600">person</span> and <span class="font-semibold text-rose-500">book</span>
           across frames, so the prediction stays grounded regardless of the domain.
@@ -237,53 +206,42 @@
         <p class="kicker">Problem Analysis</p>
         <h2 class="section-title">Fine-tuning <span class="text-rose-500">decouples</span> attention from localization.</h2>
         <p class="section-sub max-w-3xl mx-auto">
-          Pre-trained MLLMs already know <em>where</em> the entities are &mdash; across domains.
+          Pre-trained MLLMs already know <em>where</em> the entities are, in any domain.
           Naïve VTG fine-tuning learns <em>when</em>, but that knowledge fails to inherit the entity-attention
           once the visual domain changes. We call this <strong>attention&ndash;localization decoupling</strong>.
           <span class="block mt-2 text-sm text-ink/45">Analysis with Qwen2.5-VL-3B fine-tuned on Charades-STA and evaluated on QVHighlights; the same pattern holds for InternVL3-2B.</span>
         </p>
       </div>
 
-      <div class="tabs" data-tabs>
-        <div class="tab-list" role="tablist" aria-label="Problem analysis">
-          <button class="tab" role="tab" id="tab-obs" aria-controls="panel-obs" aria-selected="true">
-            <span class="tab-num">1</span> Observation <span class="tab-hint">fine-tuning breaks transfer</span>
-          </button>
-          <button class="tab" role="tab" id="tab-diag" aria-controls="panel-diag" aria-selected="false" tabindex="-1">
-            <span class="tab-num">2</span> Diagnosis <span class="tab-hint">the visual gap dominates</span>
-          </button>
-        </div>
 
-        <div class="tab-panel" role="tabpanel" id="panel-obs" aria-labelledby="tab-obs">
           <div class="panel-head">
-            <h3 class="panel-title">Entity-attention transfers &mdash; learned grounding <span class="text-rose-500">doesn't</span>.</h3>
+            <h3 class="panel-title">Entity-attention transfers. Learned grounding <span class="text-rose-500">doesn't</span>.</h3>
             <p class="panel-sub">
               Zero-shot, the MLLM already aligns query words with the right patches in both domains.
               After fine-tuning, the ground-truth attention gain shows up in-domain but barely out-of-domain.
             </p>
           </div>
-      <figure class="observation-wrap reveal-on-scroll">
+      <figure class="observation-wrap reveal-on-scroll" data-spot="obs" data-splits="0,31,73.8,100">
         <img src="static/figures/observation.png" alt="(a) Zero-shot visual-text cosine similarity on Charades-STA and QVHighlights, (b) ID vs OOD R1@0.5 after fine-tuning, (c) G.T. attention increase after fine-tuning across layers 10–18 for ID and OOD." class="observation-figure zoomable" />
       </figure>
 
-      <div class="observation-captions observation-captions-3 reveal-on-scroll">
-        <div class="obs-cap" data-letter="a">
+      <div class="observation-captions observation-captions-3 reveal-on-scroll" data-spot-for="obs">
+        <div class="obs-cap" tabindex="0" role="button" data-letter="a">
           <strong>Entity-attention transfers.</strong>
           Zero-shot, patch&ndash;word similarity (<em>e.g.</em> &ldquo;book&rdquo;, &ldquo;baby&rdquo;) is strong on both Cha. and QVH.
         </div>
-        <div class="obs-cap" data-letter="b">
+        <div class="obs-cap" tabindex="0" role="button" data-letter="b">
           <strong>Fine-tuning breaks it.</strong>
           ID&ndash;OOD gap of <span class="font-mono">19.8</span> (Cha.&rarr;QVH) and <span class="font-mono">33.4</span> (QVH&rarr;Cha.) R1@0.5.
         </div>
-        <div class="obs-cap" data-letter="c">
+        <div class="obs-cap" tabindex="0" role="button" data-letter="c">
           <strong>Learned grounding stays home.</strong>
           Attention on G.T. frames rises substantially on ID, but only marginally on OOD.
         </div>
       </div>
 
-        </div>
 
-        <div class="tab-panel" role="tabpanel" id="panel-diag" aria-labelledby="tab-diag" hidden>
+          <div class="stack-gap"></div>
           <div class="panel-head">
             <h3 class="panel-title">It's the <span class="text-amber-500">visual</span> gap, not the concept gap.</h3>
             <p class="panel-sub">
@@ -291,25 +249,23 @@
               <em>visual domain gap</em> (how far are the videos from the source distribution?).
             </p>
           </div>
-      <figure class="observation-wrap reveal-on-scroll">
+      <figure class="observation-wrap reveal-on-scroll" data-spot="diag" data-splits="0,28.1,56.3,100">
         <img src="static/figures/diagnosis.png" alt="(a) Seen vs unseen concepts: 44.0 vs 40.7 R1@0.5. (b) Visually similar vs dissimilar: 52.8 vs 39.1. (c) Perturbation analysis on ID and OOD." class="observation-figure zoomable" />
       </figure>
 
-      <div class="observation-captions observation-captions-3 reveal-on-scroll">
-        <div class="obs-cap" data-letter="a">
+      <div class="observation-captions observation-captions-3 reveal-on-scroll" data-spot-for="diag">
+        <div class="obs-cap" tabindex="0" role="button" data-letter="a">
           <strong>Concept gap is marginal.</strong>
           Seen vs. unseen query concepts: <span class="font-mono">44.0 vs. 40.7</span> (3.3-pt gap, Cha.&rarr;QVH).
         </div>
-        <div class="obs-cap" data-letter="b">
+        <div class="obs-cap" tabindex="0" role="button" data-letter="b">
           <strong>Visual gap dominates.</strong>
           Top-20% visually similar: <span class="font-mono">52.8</span>; bottom-20%: <span class="font-mono">39.1</span> (13.7-pt gap).
         </div>
-        <div class="obs-cap" data-letter="c">
+        <div class="obs-cap" tabindex="0" role="button" data-letter="c">
           <strong>The model stops looking.</strong>
           On OOD, perturbing the G.T. interval hurts as much as a random one (<span class="font-mono">&minus;12.6 vs. &minus;12.1</span>).
-          Suppressing non-G.T. frames <em>helps</em> (+4.6) &mdash; steering toward evidence recouples them.
-        </div>
-      </div>
+          Suppressing non-G.T. frames <em>helps</em> (+4.6), so steering toward evidence recouples them.
         </div>
       </div>
     </div>
@@ -323,13 +279,7 @@
         <p class="kicker text-white/60">Approach</p>
         <h2 class="section-title text-white"><span class="hero-grad">EVID</span>ence-grounded <span class="hero-grad">ENT</span>ity-attentive adaptation.</h2>
         <p class="section-sub text-white/70 max-w-3xl mx-auto">
-          Three questions, three components: <em>how</em> to route adaptation through entities,
-          <em>what</em> makes the entities meaningful, and <em>how</em> to use them as evidence for localization.
-        </p>
-        <p class="section-sub text-white/55 max-w-3xl mx-auto mt-4 text-base">
-          The roles are split on purpose: the slots only need to <em>separate</em> visual information at the entity level,
-          while judging which entities matter for the query is left to the MLLM's pre-trained entity-attention &mdash;
-          read out by E2V gating and by vision&ndash;language integration in the middle and later layers.
+          Slots <em>separate</em> entities; the MLLM's pre-trained attention decides which ones matter.
         </p>
       </div>
 
@@ -337,26 +287,20 @@
         <div class="method-card">
           <div class="method-title"><span class="method-num">i</span> EB Adapter</div>
           <p class="method-body">
-            An <strong>Entity Bottleneck Adapter</strong> in the early decoder layers (L0&ndash;10) compresses each frame's
-            64 visual tokens into <span class="font-mono">K=4</span> slots via slot attention, then reconstructs the tokens
-            purely from slot features &mdash; added back residually, leaving the pre-trained path intact.
+            Compresses each frame's tokens into <span class="font-mono">4</span> entity slots in the early decoder layers,
+            added back as a residual.
           </p>
         </div>
         <div class="method-card">
           <div class="method-title"><span class="method-num">ii</span> EB Distillation</div>
           <p class="method-body">
-            The MLLM visual space alone is too entangled for slots to bind (near-uniform attention).
-            <strong>Entity-Binding Distillation</strong> matches slot maps to per-frame DINOv2 <span class="font-mono">K</span>-means
-            clusters via Hungarian matching and a BCE loss, so each slot binds to a coherent entity.
+            Distills DINOv2 objectness into the slot maps, so each slot binds to one coherent entity.
           </p>
         </div>
         <div class="method-card">
           <div class="method-title"><span class="method-num">iii</span> E2V Gating</div>
           <p class="method-body">
-            <strong>Entity-to-eVidence gating</strong> scores each frame by the cosine similarity between its
-            down-projected visual tokens and the query's subject and object tokens. Their product
-            <span class="font-mono">g<sub>t</sub></span> is high only where both co-occur, and scales the adapter's
-            per-frame contribution.
+            Scores each frame by whether the query's subject <em>and</em> object appear, and scales the adapter there.
           </p>
         </div>
       </div>
@@ -364,10 +308,7 @@
       <figure class="mainfigure-wrap reveal-on-scroll">
         <img src="static/figures/overview.png" alt="EVIDENT overview. (a) Entity Bottleneck Adapter. (b) Entity Binding Distillation with DINOv2 clusters and Hungarian matching. (c) Entity-to-eVidence gating from subject and object similarity scores." class="mainfigure-img zoomable" />
         <figcaption class="mainfigure-cap">
-          <strong>Overview.</strong>
-          (a) EB Adapter decomposes visual tokens into entity-level slots via slot attention.
-          (b) EB Distillation distills DINOv2 entity cluster maps into slot assignment maps.
-          (c) E2V Gating modulates the adapter's influence with a per-frame co-occurrence score of query-relevant entities.
+          <strong>Overview.</strong> (a) EB Adapter &middot; (b) EB Distillation &middot; (c) E2V Gating.
         </figcaption>
       </figure>
     </div>
@@ -378,7 +319,7 @@
     <div class="max-w-6xl mx-auto px-6">
       <div class="text-center mb-12">
         <p class="kicker">Qualitative Analysis</p>
-        <h2 class="section-title">What do the slots &mdash; and the gate &mdash; capture?</h2>
+        <h2 class="section-title">What do the slots and the gate capture?</h2>
         <p class="section-sub max-w-3xl mx-auto">
           Trained only on Charades-STA, the EB Adapter decomposes scenes into people, objects, and backgrounds on
           <strong>unseen domains</strong> (QVHighlights, DiDeMo) without any domain-specific supervision.
@@ -397,12 +338,12 @@
           <h3 class="slotviz-h">The gate lights up where the query's entities <em>are</em>.</h3>
           <p class="slotviz-p">
             E2V gating scores each frame by how strongly it matches each query entity. The per-entity scores
-            follow the intervals in which each entity actually appears &mdash; <em>person</em> and <em>glass</em>
+            follow the intervals in which each entity actually appears: <em>person</em> and <em>glass</em>
             rise together once they enter the frame, while an absent concept (<em>zebra</em>) stays flat.
           </p>
           <p class="slotviz-p">
             Because the gate multiplies the subject and object scores, the adapter's contribution concentrates on
-            frames where <strong>both</strong> entities co-occur &mdash; an inductive bias that holds across domains.
+            frames where <strong>both</strong> entities co-occur. This inductive bias holds across domains.
           </p>
         </div>
         <figure class="slotviz-fig reveal-on-scroll">
@@ -430,37 +371,31 @@
         </p>
       </div>
 
-      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-14">
-        <div class="result-card">
-          <div class="result-source">Cha. &rarr; QVH &middot; R1@0.5</div>
-          <div class="result-delta">+5.5</div>
-          <div class="result-meta">54.3 &rarr; 59.8</div>
+      <!-- OOD gains over the LoRA baseline (animated grouped bars, drawn by gains-chart.js) -->
+      <figure class="gains-chart viz-root mb-14" aria-labelledby="gains-title">
+        <div class="gains-head">
+          <div>
+            <h3 id="gains-title" class="gains-title">Out-of-domain accuracy, same backbone</h3>
+            <div class="gains-legend" aria-hidden="true">
+              <span><i class="dot dot-base"></i>Qwen2.5-VL-7B + LoRA</span>
+              <span><i class="dot dot-ours"></i>EVIDENT</span>
+            </div>
+          </div>
+          <div class="gains-side">
+            <div class="gains-avg"><span id="gains-avg">+2.8</span><small>avg. OOD gain</small></div>
+            <div class="gains-toggle" role="group" aria-label="Metric">
+              <button type="button" data-metric="0" aria-pressed="true">R1@0.5</button>
+              <button type="button" data-metric="1" aria-pressed="false">R1@0.7</button>
+            </div>
+          </div>
         </div>
-        <div class="result-card">
-          <div class="result-source">Cha. &rarr; QVH &middot; R1@0.7</div>
-          <div class="result-delta">+7.2</div>
-          <div class="result-meta">29.7 &rarr; 36.9</div>
-        </div>
-        <div class="result-card">
-          <div class="result-source">QVH &rarr; Cha. &middot; R1@0.5</div>
-          <div class="result-delta">+2.1</div>
-          <div class="result-meta">48.1 &rarr; 50.2</div>
-        </div>
-        <div class="result-card">
-          <div class="result-source">Trainable params &middot; 7B</div>
-          <div class="result-delta result-delta-neutral">2.42%</div>
-          <div class="result-meta">EB Adapter + LoRA &asymp; 201M</div>
-        </div>
+        <div class="gains-plot" id="gains-plot"></div>
+        <figcaption class="gains-cap">Source &rarr; target dataset. Every out-of-domain setting improves; the full numbers are in the table below.</figcaption>
+        <div class="gains-tip" id="gains-tip" role="status" aria-live="polite"></div>
+      </figure>
       </div>
 
-      <div class="tabs" data-tabs>
-        <div class="tab-list" role="tablist" aria-label="Results">
-          <button class="tab" role="tab" id="tab-main" aria-controls="panel-main" aria-selected="true">Main results</button>
-          <button class="tab" role="tab" id="tab-bb" aria-controls="panel-bb" aria-selected="false" tabindex="-1">Other backbones</button>
-          <button class="tab" role="tab" id="tab-abl" aria-controls="panel-abl" aria-selected="false" tabindex="-1">Ablations</button>
-        </div>
 
-        <div class="tab-panel" role="tabpanel" id="panel-main" aria-labelledby="tab-main">
       <!-- Paper Table 1 -->
       <div class="overflow-x-auto">
         <table class="results-table results-table-full">
@@ -577,14 +512,13 @@
         &ldquo;&ndash;&rdquo; marks target datasets seen during their training or not reported.
       </p>
 
-        </div>
 
-        <div class="tab-panel" role="tabpanel" id="panel-bb" aria-labelledby="tab-bb" hidden>
+          <div class="stack-gap"></div>
           <div class="panel-head">
             <h3 class="panel-title">Not tied to one MLLM.</h3>
             <p class="panel-sub">
-              Trained on Charades-STA, EVIDENT improves OOD transfer on Qwen3-VL-8B and InternVL3.5-8B as well &mdash;
-              up to <span class="font-semibold text-emerald-600">+10.3</span> R1@0.7 on QVHighlights for InternVL3.5.
+              Trained on Charades-STA, EVIDENT also improves OOD transfer on Qwen3-VL-8B and InternVL3.5-8B,
+              by up to <span class="font-semibold text-emerald-600">+10.3</span> R1@0.7 on QVHighlights for InternVL3.5.
             </p>
           </div>
       <div class="overflow-x-auto max-w-4xl mx-auto">
@@ -603,9 +537,8 @@
       </div>
       <p class="text-xs text-ink/55 italic mt-4 text-center">&dagger;: fine-tuned baseline on the same backbone. <strong>Bold</strong>: best OOD result per backbone.</p>
 
-        </div>
 
-        <div class="tab-panel" role="tabpanel" id="panel-abl" aria-labelledby="tab-abl" hidden>
+          <div class="stack-gap"></div>
           <div class="panel-head">
             <h3 class="panel-title">Every component pulls its weight.</h3>
             <p class="panel-sub">All ablations on Cha. &rarr; QVH with Qwen2.5-VL-7B, reporting R1@0.5 / R1@0.7 for ID (Cha.) and OOD (QVH).</p>
@@ -716,8 +649,6 @@
         </div>
         </div>
       </details>
-        </div>
-      </div>
     </div>
   </section>
 
@@ -772,7 +703,8 @@
     <img class="lightbox-img" alt="" />
   </div>
 
-  <script src="static/js/slot-animation.js"></script>
+  <script src="static/js/evident-animation.js"></script>
   <script src="static/js/main.js"></script>
+  <script src="static/js/gains-chart.js"></script>
 </body>
 </html>

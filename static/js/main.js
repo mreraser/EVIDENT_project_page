@@ -336,3 +336,31 @@
   style.textContent = css;
   document.head.appendChild(style);
 })();
+
+// ---- Accessible tabs (analysis + results) ----
+(function () {
+  document.querySelectorAll('[data-tabs]').forEach((root) => {
+    const tabs = Array.from(root.querySelectorAll('[role="tab"]'));
+    const select = (tab) => {
+      tabs.forEach((t) => {
+        const on = t === tab;
+        t.setAttribute('aria-selected', on);
+        t.tabIndex = on ? 0 : -1;
+        const panel = document.getElementById(t.getAttribute('aria-controls'));
+        panel.hidden = !on;
+        // panels hidden at load never fired the scroll reveal
+        if (on) panel.querySelectorAll('.reveal-on-scroll').forEach((el) => el.classList.add('in-view'));
+      });
+    };
+    tabs.forEach((t, i) => {
+      t.addEventListener('click', () => select(t));
+      t.addEventListener('keydown', (e) => {
+        const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!d) return;
+        const next = tabs[(i + d + tabs.length) % tabs.length];
+        next.focus();
+        select(next);
+      });
+    });
+  });
+})();

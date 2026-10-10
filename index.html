@@ -147,7 +147,7 @@
   </header>
 
   <!-- ============================ PIPELINE ANIMATION ============================ -->
-  <section class="bg-white py-16 md:py-24">
+  <section class="bg-white py-12 md:py-16">
     <div class="max-w-6xl mx-auto px-6">
       <div class="text-center mb-10">
         <p class="kicker">Our idea, animated</p>
@@ -183,28 +183,8 @@
     </div>
   </section>
 
-  <!-- ============================ TEASER (paper Fig. 1) ============================ -->
-  <section class="bg-white py-16 md:py-20">
-    <div class="max-w-6xl mx-auto px-6">
-      <div class="text-center mb-10">
-        <p class="kicker">At a glance</p>
-        <h2 class="section-title">Same query. New domain. <span class="text-rose-500">Who</span> is still looking?</h2>
-        <p class="section-sub max-w-3xl mx-auto">
-          A naïvely fine-tuned MLLM localizes the moment on its training domain, but on an unseen domain it
-          responds indiscriminately to memorized scene context and predicts the whole video.
-          EVIDENT learns an <em>entity-centric</em> representation that consistently captures both
-          <span class="font-semibold text-emerald-600">person</span> and <span class="font-semibold text-rose-500">book</span>
-          across frames, so the prediction stays grounded regardless of the domain.
-        </p>
-      </div>
-      <figure class="observation-wrap reveal-on-scroll">
-        <img src="static/figures/teaser.jpg" alt="Teaser: on In-Domain and Out-of-Domain videos, zero-shot and naïvely fine-tuned MLLMs mislocalize the query 'During which time does the person look at a book?' under domain shift, while EVIDENT's entity-centric representation captures person and book and predicts the correct window." class="observation-figure zoomable" />
-      </figure>
-    </div>
-  </section>
-
   <!-- ============================ ABSTRACT ============================ -->
-  <section id="abstract" class="bg-slate-50 py-20">
+  <section id="abstract" class="bg-slate-50 py-16">
     <div class="max-w-4xl mx-auto px-6">
       <p class="kicker text-center">Abstract</p>
       <h2 class="section-title text-center mb-8">Ground the timestamp in the entities, not the scene.</h2>
@@ -230,8 +210,28 @@
     </div>
   </section>
 
+  <!-- ============================ TEASER (paper Fig. 1) ============================ -->
+  <section class="bg-white py-12 md:py-16">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-10">
+        <p class="kicker">At a glance</p>
+        <h2 class="section-title">Same query. New domain. <span class="text-rose-500">Who</span> is still looking?</h2>
+        <p class="section-sub max-w-3xl mx-auto">
+          A naïvely fine-tuned MLLM localizes the moment on its training domain, but on an unseen domain it
+          responds indiscriminately to memorized scene context and predicts the whole video.
+          EVIDENT learns an <em>entity-centric</em> representation that consistently captures both
+          <span class="font-semibold text-emerald-600">person</span> and <span class="font-semibold text-rose-500">book</span>
+          across frames, so the prediction stays grounded regardless of the domain.
+        </p>
+      </div>
+      <figure class="observation-wrap reveal-on-scroll">
+        <img src="static/figures/teaser.jpg" alt="Teaser: on In-Domain and Out-of-Domain videos, zero-shot and naïvely fine-tuned MLLMs mislocalize the query 'During which time does the person look at a book?' under domain shift, while EVIDENT's entity-centric representation captures person and book and predicts the correct window." class="observation-figure zoomable" />
+      </figure>
+    </div>
+  </section>
+
   <!-- ============================ MOTIVATION / ANALYSIS ============================ -->
-  <section id="motivation" class="bg-white py-24">
+  <section id="motivation" class="bg-slate-50 py-16">
     <div class="max-w-6xl mx-auto px-6">
       <div class="text-center mb-12">
         <p class="kicker">Problem Analysis</p>
@@ -244,6 +244,24 @@
         </p>
       </div>
 
+      <div class="tabs" data-tabs>
+        <div class="tab-list" role="tablist" aria-label="Problem analysis">
+          <button class="tab" role="tab" id="tab-obs" aria-controls="panel-obs" aria-selected="true">
+            <span class="tab-num">1</span> Observation <span class="tab-hint">fine-tuning breaks transfer</span>
+          </button>
+          <button class="tab" role="tab" id="tab-diag" aria-controls="panel-diag" aria-selected="false" tabindex="-1">
+            <span class="tab-num">2</span> Diagnosis <span class="tab-hint">the visual gap dominates</span>
+          </button>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-obs" aria-labelledby="tab-obs">
+          <div class="panel-head">
+            <h3 class="panel-title">Entity-attention transfers &mdash; learned grounding <span class="text-rose-500">doesn't</span>.</h3>
+            <p class="panel-sub">
+              Zero-shot, the MLLM already aligns query words with the right patches in both domains.
+              After fine-tuning, the ground-truth attention gain shows up in-domain but barely out-of-domain.
+            </p>
+          </div>
       <figure class="observation-wrap reveal-on-scroll">
         <img src="static/figures/observation.png" alt="(a) Zero-shot visual-text cosine similarity on Charades-STA and QVHighlights, (b) ID vs OOD R1@0.5 after fine-tuning, (c) G.T. attention increase after fine-tuning across layers 10–18 for ID and OOD." class="observation-figure zoomable" />
       </figure>
@@ -263,15 +281,16 @@
         </div>
       </div>
 
-      <div class="text-center mt-24 mb-12">
-        <p class="kicker">Domain Gap Diagnosis</p>
-        <h2 class="section-title">It's the <span class="text-amber-500">visual</span> gap, not the concept gap.</h2>
-        <p class="section-sub max-w-3xl mx-auto">
-          We split the OOD gap into a <em>concept domain gap</em> (are the query concepts unseen?) and a
-          <em>visual domain gap</em> (how far are the videos from the source distribution?).
-        </p>
-      </div>
+        </div>
 
+        <div class="tab-panel" role="tabpanel" id="panel-diag" aria-labelledby="tab-diag" hidden>
+          <div class="panel-head">
+            <h3 class="panel-title">It's the <span class="text-amber-500">visual</span> gap, not the concept gap.</h3>
+            <p class="panel-sub">
+              We split the OOD gap into a <em>concept domain gap</em> (are the query concepts unseen?) and a
+              <em>visual domain gap</em> (how far are the videos from the source distribution?).
+            </p>
+          </div>
       <figure class="observation-wrap reveal-on-scroll">
         <img src="static/figures/diagnosis.png" alt="(a) Seen vs unseen concepts: 44.0 vs 40.7 R1@0.5. (b) Visually similar vs dissimilar: 52.8 vs 39.1. (c) Perturbation analysis on ID and OOD." class="observation-figure zoomable" />
       </figure>
@@ -291,11 +310,13 @@
           Suppressing non-G.T. frames <em>helps</em> (+4.6) &mdash; steering toward evidence recouples them.
         </div>
       </div>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- ============================ METHOD ============================ -->
-  <section id="method" class="bg-ink text-white py-24 relative overflow-hidden">
+  <section id="method" class="bg-ink text-white py-16 relative overflow-hidden">
     <div class="absolute inset-0 hero-bg-grid opacity-30"></div>
     <div class="relative max-w-6xl mx-auto px-6">
       <div class="text-center mb-14">
@@ -353,7 +374,7 @@
   </section>
 
   <!-- ============================ WHAT DO SLOTS LEARN ============================ -->
-  <section class="bg-slate-50 py-24">
+  <section class="bg-slate-50 py-16">
     <div class="max-w-6xl mx-auto px-6">
       <div class="text-center mb-12">
         <p class="kicker">Qualitative Analysis</p>
@@ -371,7 +392,7 @@
         <strong>EB Adapter attention.</strong> Each frame is masked by its highest-attending slot, for Cha. (ID), QVH (OOD), and DiDeMo (OOD) samples.
       </p>
 
-      <div class="slotviz-layout slotviz-layout-wide mt-16">
+      <div class="slotviz-layout slotviz-layout-wide mt-12">
         <div class="slotviz-text">
           <h3 class="slotviz-h">The gate lights up where the query's entities <em>are</em>.</h3>
           <p class="slotviz-p">
@@ -395,7 +416,7 @@
   </section>
 
   <!-- ============================ RESULTS ============================ -->
-  <section id="results" class="bg-white py-24">
+  <section id="results" class="bg-white py-16">
     <div class="max-w-6xl mx-auto px-6">
       <div class="text-center mb-12">
         <p class="kicker">Cross-Domain Results</p>
@@ -432,6 +453,14 @@
         </div>
       </div>
 
+      <div class="tabs" data-tabs>
+        <div class="tab-list" role="tablist" aria-label="Results">
+          <button class="tab" role="tab" id="tab-main" aria-controls="panel-main" aria-selected="true">Main results</button>
+          <button class="tab" role="tab" id="tab-bb" aria-controls="panel-bb" aria-selected="false" tabindex="-1">Other backbones</button>
+          <button class="tab" role="tab" id="tab-abl" aria-controls="panel-abl" aria-selected="false" tabindex="-1">Ablations</button>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-main" aria-labelledby="tab-main">
       <!-- Paper Table 1 -->
       <div class="overflow-x-auto">
         <table class="results-table results-table-full">
@@ -548,15 +577,16 @@
         &ldquo;&ndash;&rdquo; marks target datasets seen during their training or not reported.
       </p>
 
-      <!-- ===== Other backbones (paper Table 2) ===== -->
-      <div class="text-center mt-24 mb-10">
-        <p class="kicker">Other Backbones</p>
-        <h2 class="section-title">Not tied to one MLLM.</h2>
-        <p class="section-sub max-w-3xl mx-auto">
-          Trained on Charades-STA, EVIDENT improves OOD transfer on Qwen3-VL-8B and InternVL3.5-8B as well &mdash;
-          up to <span class="font-semibold text-emerald-600">+10.3</span> R1@0.7 on QVHighlights for InternVL3.5.
-        </p>
-      </div>
+        </div>
+
+        <div class="tab-panel" role="tabpanel" id="panel-bb" aria-labelledby="tab-bb" hidden>
+          <div class="panel-head">
+            <h3 class="panel-title">Not tied to one MLLM.</h3>
+            <p class="panel-sub">
+              Trained on Charades-STA, EVIDENT improves OOD transfer on Qwen3-VL-8B and InternVL3.5-8B as well &mdash;
+              up to <span class="font-semibold text-emerald-600">+10.3</span> R1@0.7 on QVHighlights for InternVL3.5.
+            </p>
+          </div>
       <div class="overflow-x-auto max-w-4xl mx-auto">
         <table class="results-table ablation-table backbone-table">
           <thead>
@@ -573,13 +603,13 @@
       </div>
       <p class="text-xs text-ink/55 italic mt-4 text-center">&dagger;: fine-tuned baseline on the same backbone. <strong>Bold</strong>: best OOD result per backbone.</p>
 
-      <!-- ===== Ablations (paper Table 3) ===== -->
-      <div class="text-center mt-24 mb-10">
-        <p class="kicker">Ablation Study</p>
-        <h2 class="section-title">Every component pulls its weight.</h2>
-        <p class="section-sub max-w-3xl mx-auto">All ablations on Cha. &rarr; QVH with Qwen2.5-VL-7B, reporting R1@0.5 / R1@0.7 for ID (Cha.) and OOD (QVH). (e) and (f) are from the appendix.</p>
-      </div>
+        </div>
 
+        <div class="tab-panel" role="tabpanel" id="panel-abl" aria-labelledby="tab-abl" hidden>
+          <div class="panel-head">
+            <h3 class="panel-title">Every component pulls its weight.</h3>
+            <p class="panel-sub">All ablations on Cha. &rarr; QVH with Qwen2.5-VL-7B, reporting R1@0.5 / R1@0.7 for ID (Cha.) and OOD (QVH).</p>
+          </div>
       <div class="ablation-grid">
         <div class="ablation-block">
           <div class="ablation-title">(a) Components</div>
@@ -647,7 +677,10 @@
           </div>
           <p class="ablation-note">Per-query subject/object words beat fixed &ldquo;person&rdquo;/&ldquo;object&rdquo; by +1.4 OOD R1@0.5.</p>
         </div>
-
+      </div>
+      <details class="more-ablations">
+        <summary>More ablations from the appendix <span class="text-ink/45 font-normal">&middot; number of slots, E2V feature source</span></summary>
+        <div class="ablation-grid mt-6">
         <div class="ablation-block">
           <div class="ablation-title">(e) Number of slots</div>
           <div class="overflow-x-auto">
@@ -681,12 +714,15 @@
           </div>
           <p class="ablation-note">Gating is computed from the LLM's visual stream; the slot-reconstructed output discards details needed for entity scoring.</p>
         </div>
+        </div>
+      </details>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- ============================ BIBTEX ============================ -->
-  <section id="bibtex" class="bg-slate-50 py-20">
+  <section id="bibtex" class="bg-slate-50 py-16">
     <div class="max-w-4xl mx-auto px-6">
       <div class="text-center mb-8">
         <p class="kicker">If you find this useful</p>

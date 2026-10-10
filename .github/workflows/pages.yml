@@ -1,4 +1,4 @@
-# Deploy the SlotVTG project page to GitHub Pages.
+# Deploy the EVIDENT project page to GitHub Pages.
 # This workflow skips Jekyll and serves the static site directly,
 # which is more reliable than the auto-generated Jekyll workflow.
 name: Deploy static page

@@ -1,5 +1,5 @@
 /* =========================================================
-   SlotVTG — Hero Pipeline Animation  (responsive)
+   EVIDENT — Hero Pipeline Animation  (responsive)
    ---------------------------------------------------------
    Two layouts:
      · DESKTOP (≥768px): horizontal 1200×600 canvas
@@ -46,7 +46,7 @@
     RECN:   { x: 580, y: 204, w: 240, h: 250 },
     // LLM is positioned centrally during the residual/decode phases —
     // it grows from the right-side mini block into a paper-Fig.3 style
-    // Decoder stack with a Slot Adapter callout to its right.
+    // Decoder stack with a EB Adapter callout to its right.
     LLM:    { x: 250, y: 194, w: 520, h: 380 },
     LLM_CALLOUT: { w: 160, h: 50, gap: 28 },
     OUT:    { x: 80,  y: 590, w: 1040, h: 0 }, // unused — output rendered inside flow
@@ -550,7 +550,7 @@
   //    · a light-blue "LLM Decoder" outer card
   //    · 4 stacked rounded "Decoder Layer" boxes with snowflake (frozen)
   //    · a ⊕ between two adjacent layers (lower portion = "early layers")
-  //    · a red "Slot Adapter 🔥" callout to the right with an arrow into ⊕
+  //    · a red "EB Adapter 🔥" callout to the right with an arrow into ⊕
   //    · token-flow arrows: tokens IN at bottom, OUT at top
   //  -----------------------------------------------------------------
   function drawLLMBlock(appear, pulse, inputGlow, outputProg) {
@@ -593,7 +593,7 @@
     for (let i = 0; i < numLayers; i++) layerYs.push(innerTop + i * (layerH + gap));
 
     // ⊕ positions (top-down flow):
-    //   – Slot Adapter ⊕ in the TOP gap (between layer 0 and 1) = EARLY layers (L1–L7)
+    //   – EB Adapter ⊕ in the TOP gap (between layer 0 and 1) = EARLY layers (L0–L10)
     //   – LoRA ⊕ in the BOTTOM gap (between layer N-2 and N-1) = LATER layers
     const slotPlugIdx = 0;                 // gap BELOW layer 0 (top)
     const loraPlugIdx = numLayers - 2;     // gap BELOW second-to-last layer
@@ -712,9 +712,9 @@
       ctx.restore();
     };
 
-    // Slot Adapter callout (RED, paper Fig.3 style) at TOP plug
+    // EB Adapter callout (RED, paper Fig.3 style) at TOP plug
     drawCallout(
-      'Slot Adapter',
+      'EB Adapter',
       'rgba(220, 38, 38, 0.90)',
       'rgba(252, 165, 165, 0.55)',
       'rgba(252, 165, 165, 0.36)',
@@ -804,7 +804,7 @@
   // ----------------------------------------------------------------
   //  R E S I D U A L   V I S U A L I Z A T I O N
   //  ----------------------------------------------------------------
-  //  The Slot Adapter is inserted INSIDE the LLM decoder layers and adds
+  //  The EB Adapter is inserted INSIDE the LLM decoder layers and adds
   //  RESIDUALLY to the per-layer token activations:
   //      x  ←  x  +  Adapter(x)
   //  Without an explicit indicator the recon tokens look like they REPLACE
@@ -893,12 +893,12 @@
     // subtitle — explicit explanation
     ctx.font = `600 ${L.FONT_SMALL}px Inter, sans-serif`;
     ctx.fillStyle = 'rgba(10, 14, 39, 0.55)';
-    ctx.fillText('inside each LLM decoder layer (L1–L7)', c.x, c.y - base * 0.78);
+    ctx.fillText('inside each early decoder layer (L0–L10)', c.x, c.y - base * 0.78);
 
     // Equation below — explicit architectural form (skip + adapter = output)
     ctx.font = `700 ${L.FONT_BODY + 1}px Inter, sans-serif`;
     ctx.fillStyle = 'rgba(10, 14, 39, 0.88)';
-    ctx.fillText('Layer input  +  Slot Adapter output  =  Layer output', c.x, c.y + base * 1.0);
+    ctx.fillText('Layer input  +  gated EB Adapter output  =  Layer output', c.x, c.y + base * 1.0);
 
     // (Side annotations removed — the SKIP/ADAPTER path arrows below now
     //  carry explicit labels so the two converging streams are unambiguous.)
@@ -1036,7 +1036,7 @@
     const reconCx = L.RECN.x + L.RECN.w / 2;
     const adapterLabelX = L.isMobile ? badge.x + 110 : (badge.x + reconCx) / 2 + 10;
     const adapterLabelY = L.isMobile ? badge.y + 130 : badge.y + 75;
-    ctx.fillText('via SLOT ADAPTER', adapterLabelX, adapterLabelY);
+    ctx.fillText('via EB ADAPTER', adapterLabelX, adapterLabelY);
     ctx.fillStyle = 'rgba(78, 205, 196, 0.72)';
     ctx.font = `500 ${L.FONT_SMALL - 1}px Inter, sans-serif`;
     ctx.fillText('(entity-aware delta)', adapterLabelX, adapterLabelY + 16);

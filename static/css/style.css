@@ -1,5 +1,5 @@
 /* =========================================================
-   SlotVTG project page — custom styles
+   EVIDENT project page — custom styles
    Modern look on top of Tailwind utility classes.
    ========================================================= */
 
@@ -1253,3 +1253,57 @@ section.bg-ink .section-sub { color: rgba(255, 255, 255, 0.7); }
   }
 }
 
+
+/* =========================================================
+   EVIDENT additions
+   ========================================================= */
+.observation-captions.observation-captions-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 900px) {
+  .observation-captions.observation-captions-3 { grid-template-columns: 1fr; }
+}
+
+/* Gating figure is landscape: text left, wider figure right */
+.slotviz-layout.slotviz-layout-wide {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+}
+@media (max-width: 900px) {
+  .slotviz-layout.slotviz-layout-wide { grid-template-columns: 1fr; }
+  .slotviz-layout-wide .slotviz-fig { max-width: none; }
+}
+
+/* In-Domain cells (source = target) are de-emphasized, as in the paper */
+.results-table-full td.id { color: rgba(10, 14, 39, 0.38); }
+.results-table-full tbody tr.row-ours td.id { font-weight: 500; }
+.results-table-full tbody tr.row-zs { background: rgba(10, 14, 39, 0.035); }
+
+/* Ablation tables (paper Table 2) */
+.ablation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+@media (max-width: 900px) {
+  .ablation-grid { grid-template-columns: 1fr; }
+}
+.ablation-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+.ablation-table { font-size: 13px; }
+.ablation-table th {
+  font-size: 10.5px;
+  white-space: nowrap;
+  padding: 8px 8px;
+}
+.ablation-table td { padding: 8px 8px; }
+.ablation-note {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(10, 14, 39, 0.6);
+}
+
+/* Other-backbone table */
+.backbone-table td.id { color: rgba(10, 14, 39, 0.38); }
+.backbone-table tbody tr.group-sep td { border-top: 2px solid rgba(10, 14, 39, 0.12); }

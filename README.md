@@ -1,6 +1,6 @@
-# SlotVTG — Project Page
+# EVIDENT — Project Page
 
-Static site for **SlotVTG: Object-Centric Adapter for Generalizable Video Temporal Grounding** (CVPR 2026).
+Static site for **EVIDENT: Routing MLLM Adaptation through Entity-Grounded Visual Evidence for Cross-Domain Video Temporal Grounding** (NeurIPS 2026). An earlier version, SlotVTG, appeared at the CVPR 2026 GRAIL Workshop.
 
 This repo ships with a custom GitHub Actions workflow that deploys the static
 site to GitHub Pages *without* going through Jekyll &mdash; faster and more

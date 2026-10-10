@@ -1,5 +1,5 @@
 /* =========================================================
-   SlotVTG — main interactions
+   EVIDENT — main interactions
    - Nav scroll state
    - BibTeX copy button
    - Method-stage token grid generators (32 random tokens each side)

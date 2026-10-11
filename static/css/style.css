@@ -1689,3 +1689,9 @@ figure.spotting .spot-ring { opacity: 1; }
   .g-val { font-size: 12px; }
   .obs-cap { font-size: 0.98rem; }
 }
+/* slot attention iterations */
+.ev-svg .ev-sa .ev-box { transition: fill 0.2s ease, stroke-width 0.2s ease; }
+.ev-svg .ev-sa .ev-box.pulse { fill: #f4a3a6; stroke-width: 4; }
+.ev-svg .ev-loop { transition: stroke 0.2s ease, stroke-width 0.2s ease; }
+.ev-svg .ev-loop.spin { stroke: #d9262c; stroke-width: 2.6; }
+.ev-svg .ev-card { transition: opacity 0.6s ease; }

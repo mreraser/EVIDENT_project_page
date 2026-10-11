@@ -38,12 +38,12 @@
   const FOCUS = {
     1: ['query', 'frames', 'timeline'],
     2: ['frames', 'tokens', 'route', 'decoder', 'connector', 'adapter'],
-    3: ['adapter', 'frames', 'legend'],
-    4: ['dino', 'adapter'],
+    3: ['adapter', 'entities', 'frames', 'legend'],
+    4: ['dino', 'adapter', 'entities'],
     5: ['query', 'adapter', 'gate', 'frames'],
     6: ['decoder', 'connector', 'output', 'timeline', 'result'],
   };
-  const DUR = [5500, 7500, 8500, 6000, 7500, 10000];        // ms per step: long enough to read
+  const DUR = [5500, 7500, 12000, 6000, 7500, 10000];        // ms per step: long enough to read
   const CAPTIONS = [
     'Frames, timestamps and the query are interleaved into one token sequence.',
     'The sequence enters the LLM decoder from the bottom, the early layers.',
@@ -64,19 +64,21 @@
       gate: { dy: 46, h: 14 },
       timeline: { x0: 88, x1: 608, y: 392 },
       adapter: { x: 700, y: 100, w: 260, h: 552 },
+      panel: { x: 40, y: 298, w: 616, h: 222, cw: 104, fw: 112 },
       decoder: { x: 995, y: 140, w: 175, h: 512 },
       route: 704,
     },
     narrow: {
-      vb: [600, 1640], fs: 22,
+      vb: [600, 1740], fs: 22,
       query: { x: 16, y: 14, w: 568, h: 92, lines: 2, fs: 24 },
       legend: { x: 16, y: 1010 },
       frames: { x: 16, y: 126, w: 182, h: 150, gap: 11, cols: 3, rowGap: 92 },
       tokens: { x0: 16, x1: 572, y: 650, s: 20 },
       gate: { dy: 56, h: 16 },
       timeline: { x0: 60, x1: 540, y: 806 },
-      adapter: { x: 16, y: 1098, w: 300, h: 486 },
-      decoder: { x: 350, y: 1150, w: 234, h: 434 },
+      adapter: { x: 16, y: 1098, w: 300, h: 580 },
+      panel: { x: 16, y: 742, w: 568, h: 236, cw: 96, fw: 100 },
+      decoder: { x: 350, y: 1170, w: 234, h: 500 },
       route: null,
     },
   };
@@ -157,7 +159,7 @@
       const g = el('g', { class: 'ev-frame', 'data-in': 1, 'data-i': i, 'data-delay': 400 + i * 180, 'data-zone': 'frames' }, svg);
       el('clipPath', { id: `ev-clip-${i}` }, defs).appendChild(el('rect', { x, y, width: F.w, height: F.h, rx: 4 }));
       el('image', { href: `static/figures/anim/raw_${i}.jpg`, x, y, width: F.w, height: F.h, preserveAspectRatio: 'xMidYMid slice', 'clip-path': `url(#ev-clip-${i})` }, g);
-      el('image', { href: `static/figures/anim/ent_${i}.jpg`, x, y, width: F.w, height: F.h, preserveAspectRatio: 'xMidYMid slice', 'clip-path': `url(#ev-clip-${i})`, class: 'ev-ent', 'data-in': 3, 'data-delay': 3900 + i * 160 }, g);
+      el('image', { href: `static/figures/anim/ent_${i}.jpg`, x, y, width: F.w, height: F.h, preserveAspectRatio: 'xMidYMid slice', 'clip-path': `url(#ev-clip-${i})`, class: 'ev-ent', 'data-in': 3, 'data-delay': 8000 + i * 160 }, g);
       el('rect', { x, y, width: F.w, height: F.h, rx: 4, fill: 'none', stroke: '#cfcfcf', 'stroke-width': 1.2 }, g);
       txt(tLabel, { x: x + F.w / 2, y: y + F.h + fs * 1.25, 'text-anchor': 'middle', 'font-size': fs, fill: C.sub }, g);
       // E2V gating cell under each frame (step 5)
@@ -185,7 +187,7 @@
     });
 
     // ---- slot legend (step 3)
-    const lg = el('g', { 'data-in': 3, 'data-delay': 4800, 'data-zone': 'legend' }, svg);
+    const lg = el('g', { 'data-in': 3, 'data-delay': 8500, 'data-zone': 'legend' }, svg);
     let gx = L.legend.x;
     [['Person', [C.slots[0]]], ['Book', [C.slots[1]]], ['Others', [C.slots[2], C.slots[3]]]].forEach(([name, cols]) => {
       cols.forEach((c) => { el('rect', { x: gx, y: L.legend.y - fs * 0.8, width: fs * 0.85, height: fs * 0.85, fill: c, stroke: '#00000022' }, lg); gx += fs * 0.85 + 3; });
@@ -219,35 +221,71 @@
     el('rect', { x: A.x, y: A.y, width: A.w, height: A.h, rx: 26, fill: C.adapterBg, stroke: C.red, 'stroke-width': 2.2 }, ag);
     txt('EB Adapter', { x: A.x + A.w / 2, y: A.y + A.h + fs * 1.5, 'text-anchor': 'middle', 'font-size': fs + 1, 'font-weight': 700, fill: C.ink }, ag);
     const bx = A.x + 22, bw = A.w - 44, bh = fs * 2.05;
-    const rows = 8, gapY = (A.h - 40 - rows * bh) / (rows - 1);
+    const rows = 9, gapY = (A.h - 40 - rows * bh) / (rows - 1);
     const rowY = (k) => A.y + A.h - 20 - bh - k * (bh + gapY);       // k = 0 bottom
-    // inputs
+    // rows: 0 tokens · 1 Down · 2 LayerNorm · 3 learnable slots · 4 Slot Attention · 5 entity slots · 6 Recon · 7 E2V · 8 Up
     const inG = el('g', {}, ag);
     [C.time, C.qry, C.vis, C.vis, C.vis].forEach((col, k) => token(inG, bx + 8 + k * (fs * 1.4), rowY(0) + bh * 0.25, fs * 1.05, col));
     txt('tokens', { x: bx + bw - 4, y: rowY(0) + bh * 0.62, 'text-anchor': 'end', 'font-size': fs - 2, fill: C.sub }, inG);
     trap(ag, bx, rowY(1), bw, bh, 12, false, C.mod, 'Down Projection', fs, { 'data-hl': '3' });
     box(ag, bx, rowY(2), bw, bh, C.mod, 'LayerNorm', fs, { 'data-hl': '3' });
-    // learnable slots (become coloured at step 3)
-    const sg = el('g', { 'data-hl': '3' }, ag);
-    const ss = fs * 1.15, sx0 = bx + bw / 2 - 2 * ss - 6;
-    C.slots.forEach((c, k) => {
-      el('rect', { x: sx0 + k * (ss + 4), y: rowY(3) + (bh - ss) / 2, width: ss, height: ss, rx: 3, fill: '#ffffff', stroke: '#8a8a8a', 'stroke-width': 1.4 }, sg);
-      el('rect', { x: sx0 + k * (ss + 4), y: rowY(3) + (bh - ss) / 2, width: ss, height: ss, rx: 3, fill: c, stroke: '#00000033', 'data-in': 3, 'data-delay': 2100 + k * 260 }, sg);
+    const ss = fs * 1.15, sx0 = bx + 10;
+    const slotRow = (k, fills, label, extra) => {
+      const g = el('g', extra, ag);
+      fills.forEach((f, j) => el('rect', { x: sx0 + j * (ss + 4), y: rowY(k) + (bh - ss) / 2, width: ss, height: ss, rx: 3,
+        fill: f, stroke: f === '#ffffff' ? '#8a8a8a' : '#00000033', 'stroke-width': 1.4, class: 'ev-slot' }, g));
+      txt(label, { x: bx + bw - 4, y: rowY(k) + bh * 0.62, 'text-anchor': 'end', 'font-size': fs - 2, fill: C.sub }, g);
+      return g;
+    };
+    // identical, learnable initial slots: they only become entities through slot attention
+    const initSlots = slotRow(3, ['#ffffff', '#ffffff', '#ffffff', '#ffffff'], 'learnable slots', { 'data-hl': '3' });
+    // slot attention is trimmed on both sides so its iteration loop fits inside the adapter, on the right
+    const saIn = 24, saR = bx + bw - saIn;
+    box(ag, bx + saIn, rowY(4), bw - 2 * saIn, bh, C.key, 'Slot Attention', fs, { 'data-hl': '3,4', class: 'ev-sa' });
+    // the paper's iteration loop (×I), on the right of slot attention
+    const ly0 = rowY(4) + bh * 0.25, ly1 = rowY(4) + bh * 0.75;
+    el('path', { d: `M${saR},${ly0} C${saR + 20},${ly0 - 6} ${saR + 20},${ly1 + 6} ${saR + 1},${ly1}`, fill: 'none', stroke: C.ink, 'stroke-width': 1.6, 'marker-end': 'url(#ev-arr)', class: 'ev-loop' }, ag);
+    txt('×I', { x: saR + 23, y: rowY(4) + bh * 0.62, 'font-size': fs - 3, fill: C.ink }, ag);
+    // entity slots: coloured only after slot attention
+    const entSlots = slotRow(5, C.slots, 'entity slots', { 'data-hl': '3' });
+    // coloured only after the 3 iterations end (~4.0s into the step)
+    entSlots.querySelectorAll('.ev-slot').forEach((r, j) => { r.setAttribute('data-in', 3); r.setAttribute('data-delay', 4100 + j * 260); });
+    box(ag, bx, rowY(6), bw, bh, C.mod, 'Token Reconstruction', fs - 1, { 'data-hl': '3' });
+    box(ag, bx, rowY(7), bw, bh, C.key, 'E2V Gating', fs, { 'data-hl': '5' });
+    trap(ag, bx, rowY(8), bw, bh, 12, true, C.mod, 'Up Projection', fs, { 'data-hl': '6' });
+    for (let k = 0; k < 8; k++) arrow(ag, `M${bx + bw / 2},${rowY(k)} L${bx + bw / 2},${rowY(k + 1) + bh + 1}`);
+
+    // ---- "one frame, four entity slots" panel (steps 3–4): the frame exploded into its slots
+    const P = L.panel;
+    const pg = el('g', { 'data-in': 3, 'data-out': 5, 'data-delay': 4300, 'data-zone': 'entities' }, svg);
+    el('rect', { x: P.x, y: P.y, width: P.w, height: P.h, rx: 10, fill: '#ffffff', stroke: '#d6d6d6', 'stroke-width': 1.2 }, pg);
+    txt('One frame (90s), split into 4 entity slots', { x: P.x + 16, y: P.y + fs * 1.5, 'font-size': fs, 'font-weight': 700, fill: C.ink }, pg);
+    const ch = P.cw * 0.87, py = P.y + fs * 2.4, cards = [];
+    el('image', { href: 'static/figures/anim/raw_3.jpg', x: P.x + 16, y: py, width: P.fw, height: P.fw * 0.87, preserveAspectRatio: 'xMidYMid slice' }, pg);
+    txt('frame', { x: P.x + 16 + P.fw / 2, y: py + P.fw * 0.87 + fs * 1.2, 'text-anchor': 'middle', 'font-size': fs - 2, fill: C.sub }, pg);
+    const cx0 = P.x + 16 + P.fw + 26, cgap = (P.w - 32 - P.fw - 26 - 4 * P.cw) / 3;
+    txt('=', { x: P.x + 16 + P.fw + 13, y: py + ch / 2 + fs * 0.4, 'text-anchor': 'middle', 'font-size': fs + 6, fill: C.mute }, pg);
+    ['person', 'book', 'other', 'other'].forEach((name, k) => {
+      const x = cx0 + k * (P.cw + cgap);
+      // empty placeholder until the slot arrives; the slot colour frames the card only once it is filled
+      el('rect', { x, y: py, width: P.cw, height: ch, rx: 4, fill: '#f4f4f4', stroke: '#c8c8c8', 'stroke-dasharray': '4 4' }, pg);
+      el('rect', { x: x - 2.5, y: py - 2.5, width: P.cw + 5, height: ch + 5, rx: 5, fill: C.slots[k], 'data-in': 3, 'data-delay': 6450 + k * 380 }, pg);
+      const im = el('image', { href: `static/figures/anim/slot${k}_3.jpg`, x, y: py, width: P.cw, height: ch, preserveAspectRatio: 'xMidYMid slice', class: 'ev-card', 'data-in': 3, 'data-delay': 6450 + k * 380 }, pg);   // lands with its slot square
+      const lab = el('text', { x: x + P.cw / 2, y: py + ch + fs * 1.2, 'text-anchor': 'middle', 'font-size': fs - 2, fill: C.ink }, pg);
+      const t1 = el('tspan', { 'font-weight': 700 }, lab); t1.textContent = `slot ${k + 1}`;
+      const twoLines = P.cw < 100;                    // phones: "slot 1" over "person"
+      const t2 = el('tspan', twoLines ? { fill: C.sub, x: x + P.cw / 2, dy: fs * 1.15 } : { fill: C.sub }, lab);
+      t2.textContent = twoLines ? name : ` · ${name}`;
+      cards.push({ x: x + P.cw / 2, y: py + ch / 2, im });
     });
-    txt('slots', { x: bx + bw - 4, y: rowY(3) + bh * 0.62, 'text-anchor': 'end', 'font-size': fs - 2, fill: C.sub }, sg);
-    box(ag, bx, rowY(4), bw, bh, C.key, 'Slot Attention', fs, { 'data-hl': '3,4' });
-    txt('×I', { x: bx - 6, y: rowY(4) + bh * 0.66, 'text-anchor': 'end', 'font-size': fs - 2, fill: C.ink }, ag);
-    box(ag, bx, rowY(5), bw, bh, C.mod, 'Token Reconstruction', fs - 1, { 'data-hl': '3' });
-    box(ag, bx, rowY(6), bw, bh, C.key, 'E2V Gating', fs, { 'data-hl': '5' });
-    trap(ag, bx, rowY(7), bw, bh, 12, true, C.mod, 'Up Projection', fs, { 'data-hl': '5' });
-    for (let k = 0; k < 7; k++) arrow(ag, `M${bx + bw / 2},${rowY(k)} L${bx + bw / 2},${rowY(k + 1) + bh + 1}`);
 
     // DINOv2 distillation (training only, step 4): frozen grey box above the adapter
     const dg = el('g', { 'data-in': 4, 'data-delay': 0, class: 'ev-train', 'data-zone': 'dino' }, svg);
     const dh = fs * 1.9, dyTop = A.y - dh - 14;
     box(dg, A.x + 22, dyTop, A.w - 44, dh, C.frz, 'DINOv2 \u2192 EB Distillation', fs - 3);
     const side = A.x + A.w + 14;
-    const dinoPath = el('path', { d: `M${A.x + A.w - 22},${dyTop + dh / 2} L${side},${dyTop + dh / 2} L${side},${rowY(4) + bh / 2} L${bx + bw + 3},${rowY(4) + bh / 2}`,
+    const yJ = rowY(4) - gapY / 2, xJ = saR - 16;
+    const dinoPath = el('path', { d: `M${A.x + A.w - 22},${dyTop + dh / 2} L${side},${dyTop + dh / 2} L${side},${yJ} L${xJ},${yJ} L${xJ},${rowY(4) - 2}`,
       fill: 'none', stroke: C.frz[1], 'stroke-width': 1.8, 'stroke-dasharray': '5 5', 'marker-end': 'url(#ev-arr)' }, dg);
 
     // ---- LLM decoder: early layers at the BOTTOM
@@ -294,7 +332,7 @@
     // geometry the choreography needs (travellers fly between these)
     svg._R = {
       F, pos, s, T, seqX: (k) => T.x0 + k * step,
-      ad: { cx: bx + bw / 2, rowY, bh, inY: rowY(0) + bh * 0.25, sx0, ss },
+      ad: { cx: bx + bw / 2, rowY, bh, inY: rowY(0) + bh * 0.25, sx0, ss }, cards,
       dec: { cx: D.x + D.w / 2, early: yBot - lh / 2, late: yTop + lh / 2, top: D.y, outY: D.y - fs * 2.6 },
       gateCells, dinoPath, connector, route: svg.querySelector('#ev-route'),
       ours: { x: (tx(2) + tx(4)) / 2, y: oursY + fs * 1.25 }, fs,
@@ -320,7 +358,7 @@
   function show(n, animate) {
     steps = n;
     svg.querySelectorAll('[data-in]').forEach((e) => {
-      const on = n >= +e.dataset.in;
+      const on = n >= +e.dataset.in && !(e.dataset.out && n >= +e.dataset.out);
       e.style.transitionDelay = animate && on && +e.dataset.in === n ? `${e.dataset.delay || 0}ms` : '0ms';
       e.classList.toggle('on', on);
     });
@@ -413,19 +451,33 @@
       })));
       await Promise.all(hand);
     },
-    // 3: tokens climb to slot attention; the four slots light up and pour their colours onto the frames
+    // 3: tokens climb to slot attention; the identical learnable slots enter it, iterate (×I),
+    //    and come out as 4 distinct entity slots, each of which then claims its part of a frame
     3: async (g) => {
-      const R = svg._R;
-      const d = await climb(0, 4, 2000, g);
+      const R = svg._R, ss = R.ad.ss, sx = (j) => R.ad.sx0 + j * (ss + 4) + ss / 2;
+      const d = await climb(0, 4, 1600, g);
       fadeOut(d, g);
-      await wait(1000, g);
-      const slotY = R.ad.rowY(3) + R.ad.bh / 2;
-      C.slots.forEach((c, k) => later(k * 120, g, () => {
-        const x0 = R.ad.sx0 + k * (R.ad.ss + 4) + R.ad.ss / 2;
-        const tgt = R.pos[[1, 3, 4, 0][k]], tx = tgt.x + R.F.w / 2, ty = tgt.y + R.F.h / 2;
-        const sq = el('rect', { x: x0 - R.ad.ss / 2, y: slotY - R.ad.ss / 2, width: R.ad.ss, height: R.ad.ss, rx: 3, fill: c, stroke: '#00000033' }, ov());
-        fly(sq, x0, slotY, tx, ty, 1100, g, 60)
-          .then(() => tween(400, (t) => { sq.setAttribute('opacity', 1 - t); const w = R.ad.ss * (1 + 3 * t); sq.setAttribute('width', w); sq.setAttribute('height', w); place(sq, tx, ty); }, g))
+      // white learnable slots move up into slot attention
+      const whites = [0, 1, 2, 3].map((j) => el('rect', { x: sx(j) - ss / 2, y: rowMid(3) - ss / 2, width: ss, height: ss, rx: 3, fill: '#ffffff', stroke: '#8a8a8a', 'stroke-width': 1.4 }, ov()));
+      await Promise.all(whites.map((w, j) => fly(w, sx(j), rowMid(3), R.ad.cx - 1.5 * (ss + 4) + j * (ss + 4), rowMid(4), 700, g).catch(drop(w))));
+      whites.forEach((w) => w.remove());
+      // iterations: the slot-attention box pulses three times
+      const sa = svg.querySelector('.ev-sa .ev-box'), saLabel = svg.querySelector('.ev-sa text'), loop = svg.querySelector('.ev-loop');
+      for (let it = 1; it <= 3; it++) {
+        saLabel.textContent = `Slot Attention · ${it}/3`;
+        sa.classList.add('pulse'); loop.classList.add('spin');
+        await wait(420, g);
+        sa.classList.remove('pulse'); loop.classList.remove('spin');
+        await wait(160, g);
+      }
+      saLabel.textContent = 'Slot Attention';
+      // coloured entity slots emerge above (their row fades in via data-delay ≈ 3600ms)
+      await wait(1500, g);
+      // each entity slot flies to its card and reveals what it binds to
+      R.cards.forEach((c, k) => later(k * 380, g, () => {
+        const sq = el('rect', { x: sx(k) - ss / 2, y: rowMid(5) - ss / 2, width: ss, height: ss, rx: 3, fill: C.slots[k], stroke: '#00000033' }, ov());
+        fly(sq, sx(k), rowMid(5), c.x, c.y, 900, g, 50)
+          .then(() => tween(300, (t) => { const w = ss * (1 + 2.5 * t); sq.setAttribute('width', w); sq.setAttribute('height', w); place(sq, c.x, c.y); sq.setAttribute('opacity', 1 - t); }, g))
           .then(drop(sq), drop(sq));
       }));
     },
@@ -441,9 +493,9 @@
     // 5: climb to E2V gating; gate scores fly down to each frame
     5: async (g) => {
       const R = svg._R;
-      const d = await climb(4, 6, 1400, g);
+      const d = await climb(4, 7, 1600, g);
       fadeOut(d, g);
-      const from = { x: R.ad.cx, y: rowMid(6) };
+      const from = { x: R.ad.cx, y: rowMid(7) };
       R.gateCells.forEach((cell, i) => later(100 + i * 120, g, () => {
         const tx = +cell.getAttribute('x') + +cell.getAttribute('width') / 2, ty = +cell.getAttribute('y') + +cell.getAttribute('height') / 2;
         const p = dot(C.key[1], R.fs * 0.36, from.x, from.y);
@@ -456,10 +508,10 @@
     // 6: up projection -> decoder early layers -> late layers -> answer; the answer drops onto the timeline
     6: async (g) => {
       const R = svg._R;
-      const d = await climb(6, 7, 700, g);
+      const d = await climb(7, 8, 700, g);
       try {
         const c0 = startOf(R.connector);
-        await fly(d, spineX(), rowMid(7), c0.x, c0.y, 350, g);      // glide to the connector instead of jumping
+        await fly(d, spineX(), rowMid(8), c0.x, c0.y, 350, g);      // glide to the connector instead of jumping
         await along(R.connector, d, 900, g);
         const [x, y] = pt(d);
         await fly(d, x, y, R.dec.cx, R.dec.late, 800, g);
@@ -482,6 +534,10 @@
   function play(n) {
     gen++;
     svg._ov.innerHTML = '';
+    // undo transient step-3 state in case an iteration was interrupted
+    const saLab = svg.querySelector('.ev-sa text');
+    if (saLab) saLab.textContent = 'Slot Attention';
+    svg.querySelectorAll('.pulse, .spin').forEach((e) => e.classList.remove('pulse', 'spin'));
     show(n, true);
     if (PLAY[n]) PLAY[n](gen).catch(() => {});
   }

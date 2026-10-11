@@ -381,15 +381,15 @@
             </div>
           </div>
           <div class="gains-side">
-            <div class="gains-avg"><span id="gains-avg">+2.8</span><small>avg. OOD gain</small></div>
+            <div class="gains-avg"><span id="gains-avg">+2.9</span><small id="gains-rel">avg. OOD gain (+10% rel.)</small></div>
             <div class="gains-toggle" role="group" aria-label="Metric">
-              <button type="button" data-metric="0" aria-pressed="true">R1@0.5</button>
-              <button type="button" data-metric="1" aria-pressed="false">R1@0.7</button>
+              <button type="button" data-metric="1" aria-pressed="true" title="Recall@1 at IoU ≥ 0.7">R1@0.7</button>
+              <button type="button" data-metric="0" aria-pressed="false" title="Recall@1 at IoU ≥ 0.5">R1@0.5</button>
             </div>
           </div>
         </div>
         <div class="gains-plot" id="gains-plot"></div>
-        <figcaption class="gains-cap">Source &rarr; target dataset. Every out-of-domain setting improves; the full numbers are in the table below.</figcaption>
+        <figcaption class="gains-cap">Source &rarr; target dataset. <strong>R1@0.7</strong> = share of queries whose top-1 predicted window overlaps the ground truth with IoU &ge; 0.7 (the stricter metric). Every out-of-domain setting improves; the full numbers are in the table below.</figcaption>
         <div class="gains-tip" id="gains-tip" role="status" aria-live="polite"></div>
       </figure>
       </div>

@@ -1695,3 +1695,4 @@ figure.spotting .spot-ring { opacity: 1; }
 .ev-svg .ev-loop { transition: stroke 0.2s ease, stroke-width 0.2s ease; }
 .ev-svg .ev-loop.spin { stroke: #d9262c; stroke-width: 2.6; }
 .ev-svg .ev-card { transition: opacity 0.6s ease; }
+.gains-avg small { white-space: nowrap; }

@@ -11,20 +11,20 @@
 
   const GROUPS = [['Cha.', 'QVH'], ['Cha.', 'DiDeMo'], ['QVH', 'Cha.'], ['QVH', 'DiDeMo']];
   const METRICS = [
-    { name: 'R1@0.5', base: [54.3, 53.8, 48.1, 34.1], ours: [59.8, 55.4, 50.2, 36.0] },
-    { name: 'R1@0.7', base: [29.7, 30.3, 26.2, 16.9], ours: [36.9, 32.3, 28.0, 17.4] },
+    { name: 'R1@0.5', ymax: 70, base: [54.3, 53.8, 48.1, 34.1], ours: [59.8, 55.4, 50.2, 36.0] },
+    { name: 'R1@0.7', ymax: 40, base: [29.7, 30.3, 26.2, 16.9], ours: [36.9, 32.3, 28.0, 17.4] },
   ];
-  const YMAX = 70, H = 300, TOP = 34, BOTTOM = 52;
+  const H = 300, TOP = 34, BOTTOM = 52;
   const NS = 'http://www.w3.org/2000/svg';
   const tip = document.getElementById('gains-tip');
   const avgEl = document.getElementById('gains-avg');
   const toggles = document.querySelectorAll('.gains-toggle button');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  let metric = 0, grown = false, bars = [], svg = null, W = 0, lastW = -1;
+  let metric = 1, ymax = 40, grown = false, axisG = null, LEFT = 34, RIGHT = 8, bars = [], svg = null, W = 0, lastW = -1;
   const el = (tag, a, p) => { const e = document.createElementNS(NS, tag); for (const k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; };
   const ease = (t) => 1 - Math.pow(1 - t, 3);
-  const y = (v) => TOP + (1 - v / YMAX) * (H - TOP - BOTTOM);
+  const y = (v) => TOP + (1 - v / ymax) * (H - TOP - BOTTOM);
   const base = H - BOTTOM;
   // bar with 4px rounded top, square bottom on the baseline
   const barPath = (x, w, v) => {
@@ -36,14 +36,11 @@
     W = Math.max(300, Math.round(root.getBoundingClientRect().width));
     root.innerHTML = '';
     svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': ariaText() }, root);
-    const LEFT = 34, RIGHT = 8;
     const gw = (W - LEFT - RIGHT) / GROUPS.length;
     const bw = Math.min(56, gw * 0.3), gap = 2;
 
-    for (let v = 0; v <= YMAX; v += 10) {
-      el('line', { x1: LEFT, x2: W - RIGHT, y1: y(v), y2: y(v), class: v ? 'g-grid' : 'g-base-line' }, svg);
-      const t = el('text', { x: LEFT - 8, y: y(v) + 4, class: 'g-axis', 'text-anchor': 'end' }, svg); t.textContent = v;
-    }
+    axisG = el('g', {}, svg);
+    drawAxis();
     bars = GROUPS.map(([src, tgt], i) => {
       const cx = LEFT + gw * i + gw / 2;
       const g = el('g', { class: 'g-row', tabindex: 0 }, svg);
@@ -65,6 +62,15 @@
     draw(grown ? 1 : 0, grown ? 1 : 0, 1);
   }
 
+  // gridlines + labels for the current (possibly morphing) y range
+  function drawAxis() {
+    axisG.innerHTML = '';
+    for (let v = 0; v <= ymax + 0.01; v += 10) {
+      el('line', { x1: LEFT, x2: W - RIGHT, y1: y(v), y2: y(v), class: v ? 'g-grid' : 'g-base-line' }, axisG);
+      const t = el('text', { x: LEFT - 8, y: y(v) + 4, class: 'g-axis', 'text-anchor': 'end' }, axisG); t.textContent = v;
+    }
+  }
+
   // place every mark for the current values; k scales bar height (grow-in), badgeOpacity fades the gains
   function draw(kBase, kOurs, badgeOpacity) {
     const m = METRICS[metric];
@@ -75,14 +81,19 @@
       b.tb.setAttribute('x', b.xb + b.bw / 2); b.tb.setAttribute('y', y(vb) - 7);
       b.tb.textContent = kBase > 0.02 && !b.narrow ? vb.toFixed(1) : '';   // phones: keep only EVIDENT's value
       b.to.setAttribute('x', b.xo + b.bw / 2); b.to.setAttribute('y', y(vo) - 7); b.to.textContent = kOurs > 0.02 ? vo.toFixed(1) : '';
-      const d = (m.ours[b.i] - m.base[b.i]).toFixed(1);
-      b.bt.textContent = b.narrow ? `+${d}` : `▲ +${d}`;
-      const bwid = (b.narrow ? 8 : 22) + d.length * 8 + 14;
-      const by = Math.min(y(vo), y(vb)) - 46;
-      b.badge.firstChild.setAttribute('x', b.cx - bwid / 2); b.badge.firstChild.setAttribute('y', by); b.badge.firstChild.setAttribute('width', bwid);
-      b.bt.setAttribute('x', b.cx); b.bt.setAttribute('y', by + 15.5);
-      b.badge.style.opacity = badgeOpacity;
+      placeBadge(b, vb, vo, m, badgeOpacity);
     });
+  }
+
+  // gain badge rides above the taller bar; text comes from metric m
+  function placeBadge(b, vb, vo, m, opacity) {
+    const d = (m.ours[b.i] - m.base[b.i]).toFixed(1);
+    b.bt.textContent = b.narrow ? `+${d}` : `\u25B2 +${d}`;
+    const bwid = (b.narrow ? 8 : 22) + d.length * 8 + 14;
+    const by = Math.min(y(vo), y(vb)) - 46;
+    b.badge.firstChild.setAttribute('x', b.cx - bwid / 2); b.badge.firstChild.setAttribute('y', by); b.badge.firstChild.setAttribute('width', bwid);
+    b.bt.setAttribute('x', b.cx); b.bt.setAttribute('y', by + 15.5);
+    b.badge.style.opacity = opacity;
   }
 
   function tween(dur, fn, done) {
@@ -104,11 +115,14 @@
     const from = METRICS[metric], to = METRICS[k];
     metric = k;
     toggles.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.metric === k)));
-    avgEl.textContent = `+${avgGain(k).toFixed(1)}`;
+    setAvg();
     svg.setAttribute('aria-label', ariaText());
-    if (!grown) return;
-    // morph: interpolate values between the two metrics
+    if (!grown) { ymax = to.ymax; drawAxis(); return; }
+    // morph: interpolate values and the y range between the two metrics
+    const y0 = from.ymax;
     tween(700, (t) => {
+      ymax = y0 + (to.ymax - y0) * t;
+      drawAxis();
       bars.forEach((b) => {
         const vb = from.base[b.i] + (to.base[b.i] - from.base[b.i]) * t;
         const vo = from.ours[b.i] + (to.ours[b.i] - from.ours[b.i]) * t;
@@ -116,11 +130,18 @@
         b.po.setAttribute('d', barPath(b.xo, b.bw, vo));
         b.tb.setAttribute('y', y(vb) - 7); b.tb.textContent = b.narrow ? '' : vb.toFixed(1);
         b.to.setAttribute('y', y(vo) - 7); b.to.textContent = vo.toFixed(1);
-        b.badge.style.opacity = Math.abs(t - 0.5) * 2;
+        // badge follows the bars, fades out, and comes back with the new metric's gain
+        placeBadge(b, vb, vo, t < 0.5 ? from : to, Math.abs(t - 0.5) * 2);
       });
     }, () => draw(1, 1, 1));
   }
 
+  const relGain = (k) => METRICS[k].ours.reduce((s, v, i) => s + (v - METRICS[k].base[i]) / METRICS[k].base[i], 0) / GROUPS.length * 100;
+  const setAvg = () => {
+    avgEl.textContent = `+${avgGain(metric).toFixed(1)}`;
+    const rel = document.getElementById('gains-rel');
+    if (rel) rel.textContent = `avg. OOD gain (+${Math.round(relGain(metric))}% rel.)`;
+  };
   const avgGain = (k) => METRICS[k].ours.reduce((s, v, i) => s + v - METRICS[k].base[i], 0) / GROUPS.length;
   const ariaText = () => `${METRICS[metric].name}: ` + GROUPS.map(([a, b], i) =>
     `${a} to ${b}, LoRA ${METRICS[metric].base[i]}, EVIDENT ${METRICS[metric].ours[i]}`).join('; ');
@@ -142,6 +163,7 @@
   }
 
   toggles.forEach((b) => b.addEventListener('click', () => setMetric(+b.dataset.metric)));
+  setAvg();
   render();
   lastW = root.clientWidth;
   window.addEventListener('resize', () => { if (root.clientWidth !== lastW) { lastW = root.clientWidth; render(); } });

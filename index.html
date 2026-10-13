@@ -170,11 +170,9 @@
         <h2 class="section-title">Find the entities, then find the moment.</h2>
       </div>
 
-      <div class="ev-stage">
-        <p id="ev-caption" class="ev-caption" aria-live="polite"><span class="ev-cap-num"></span><span class="ev-cap-text"></span></p>
-        <div id="ev-anim" class="ev-anim"></div>
-        <ol id="ev-steps" class="ev-steps" aria-label="Animation steps"></ol>
-      </div>
+      <figure class="teaser-anim">
+        <img src="static/figures/teaser-anim.svg" width="1280" height="432" alt="How EVIDENT works: for the query 'When does the person look at a book?', each frame's patches are grouped into entities, every frame gets a subject (person) and object (book) score, and only frames with both are kept, giving the evidence-grounded prediction [84s, 96s]." />
+      </figure>
     </div>
   </section>
 
@@ -304,12 +302,11 @@
         </div>
       </div>
 
-      <figure class="mainfigure-wrap reveal-on-scroll">
-        <img src="static/figures/overview.png" alt="EVIDENT overview. (a) Entity Bottleneck Adapter. (b) Entity Binding Distillation with DINOv2 clusters and Hungarian matching. (c) Entity-to-eVidence gating from subject and object similarity scores." class="mainfigure-img zoomable" />
-        <figcaption class="mainfigure-cap">
-          <strong>Overview.</strong> (a) EB Adapter &middot; (b) EB Distillation &middot; (c) E2V Gating.
-        </figcaption>
-      </figure>
+      <div class="mainfigure-wrap reveal-on-scroll">
+        <p id="ev-caption" class="ev-caption" aria-live="polite"><span class="ev-cap-num"></span><span class="ev-cap-text"></span></p>
+        <div id="ev-anim" class="ev-anim"></div>
+        <ol id="ev-steps" class="ev-steps" aria-label="Animation steps"></ol>
+      </div>
     </div>
   </section>
 

@@ -392,8 +392,16 @@
   // Travellers are always created AT their start point (no frame at the SVG origin) ...
   const dot = (fill, r, x, y) => el('circle', { r, cx: x, cy: y, fill, stroke: '#ffffff', 'stroke-width': 1.5 }, ov());
   const tokSq = (col, size, x, y) => el('rect', { x: x - size / 2, y: y - size / 2, width: size, height: size, rx: 3, fill: col[0], stroke: col[1], 'stroke-width': 1.6 }, ov());
+  // a small row of tokens that travels as one unit (cols: [fill, stroke] pairs)
+  const packet = (cols, size, x, y) => {
+    const g = el('g', {}, ov()), gap = 3, w = cols.length * size + (cols.length - 1) * gap;
+    cols.forEach(([fill, stroke], k) => el('rect', { x: -w / 2 + k * (size + gap), y: -size / 2, width: size, height: size, rx: 2.5, fill, stroke, 'stroke-width': 1.4 }, g));
+    place(g, x, y);
+    return g;
+  };
   const place = (e, x, y) => {
-    if (e.tagName === 'circle') { e.setAttribute('cx', x); e.setAttribute('cy', y); }
+    if (e.tagName === 'g') { e.dataset.x = x; e.dataset.y = y; e.setAttribute('transform', `translate(${x} ${y})`); }
+    else if (e.tagName === 'circle') { e.setAttribute('cx', x); e.setAttribute('cy', y); }
     else { const w = +e.getAttribute('width'); e.setAttribute('x', x - w / 2); e.setAttribute('y', y - w / 2); }
   };
   // ... only spawned while their step is still current, and removed when a move is cancelled.
@@ -408,12 +416,15 @@
   function fly(e, x0, y0, x1, y1, ms, g, arc = 0) {
     return tween(ms, (t) => place(e, lerp(x0, x1, t), lerp(y0, y1, t) - Math.sin(Math.PI * t) * arc), g);
   }
-  const spineX = () => svg._R.ad.cx + svg._R.fs * 0.9;
+  const spineX = () => svg._R.ad.cx;                       // packets ride the adapter's arrows
   const rowMid = (k) => svg._R.ad.rowY(k) + svg._R.ad.bh / 2;
-  // a dot climbing the adapter's spine from row k0 to row k1 (resolves with the dot, rejects after removing it)
+  // the tokens in flight: input tokens below slot attention, entity slots above it, tokens again after up projection
+  const SLOT_COLS = C.slots.map((f) => [f, '#00000033']);
+  const cargo = (k) => (k >= 4 && k < 7 ? SLOT_COLS : [C.vis, C.time, C.qry]);
+  // a token packet climbing the adapter's spine from row k0 to row k1 (resolves with it, rejects after removing it)
   function climb(k0, k1, ms, g, d) {
     const R = svg._R;
-    d = d || dot(C.red, R.fs * 0.42, spineX(), rowMid(k0));
+    d = d || packet(cargo(k0), R.fs * 0.8, spineX(), rowMid(k0));
     return tween(ms, (t) => place(d, spineX(), lerp(rowMid(k0), rowMid(k1), t)), g)
       .then(() => d, (e) => { d.remove(); throw e; });
   }
@@ -499,7 +510,7 @@
       const from = { x: R.ad.cx, y: rowMid(7) };
       R.gateCells.forEach((cell, i) => later(100 + i * 120, g, () => {
         const tx = +cell.getAttribute('x') + +cell.getAttribute('width') / 2, ty = +cell.getAttribute('y') + +cell.getAttribute('height') / 2;
-        const p = dot(C.key[1], R.fs * 0.36, from.x, from.y);
+        const p = tokSq([C.red, '#ffffff'], R.fs * 0.72, from.x, from.y);
         p.setAttribute('fill-opacity', (0.25 + 0.75 * GATE[i]).toFixed(2));
         fly(p, from.x, from.y, tx, ty, 900, g, 70).then(() => fadeOut(p, g, 200), drop(p));
       }));
@@ -528,7 +539,8 @@
       fadeOut(t, g, 400);
     },
   };
-  const pt = (e) => e.tagName === 'circle'
+  const pt = (e) => e.tagName === 'g' ? [+e.dataset.x, +e.dataset.y]
+    : e.tagName === 'circle'
     ? [+e.getAttribute('cx'), +e.getAttribute('cy')]
     : [+e.getAttribute('x') + +e.getAttribute('width') / 2, +e.getAttribute('y') + +e.getAttribute('height') / 2];
 

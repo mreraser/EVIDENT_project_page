@@ -183,11 +183,9 @@
         <p class="kicker">At a glance</p>
         <h2 class="section-title">Same query. New domain. <span class="text-rose-500">Who</span> is still looking?</h2>
         <p class="section-sub max-w-3xl mx-auto">
-          A naïvely fine-tuned MLLM localizes the moment on its training domain, but on an unseen domain
-          it gets the moment wrong.
-          EVIDENT learns an <em>entity-centric</em> representation that consistently captures both
-          <span class="font-semibold text-emerald-600">person</span> and <span class="font-semibold text-rose-500">book</span>
-          across frames, so the prediction stays grounded regardless of the domain.
+          On an unseen domain, naïve fine-tuning loses the moment. EVIDENT keeps tracking the
+          <span class="font-semibold text-emerald-600">person</span> and the <span class="font-semibold text-rose-500">book</span>,
+          so its prediction stays grounded.
         </p>
       </div>
       <figure class="observation-wrap reveal-on-scroll">
@@ -203,20 +201,15 @@
         <p class="kicker">Problem Analysis</p>
         <h2 class="section-title">Fine-tuning <span class="text-rose-500">decouples</span> attention from localization.</h2>
         <p class="section-sub max-w-3xl mx-auto">
-          Pre-trained MLLMs already know <em>where</em> the entities are, in any domain.
-          Naïve VTG fine-tuning learns <em>when</em>, but that knowledge fails to inherit the entity-attention
-          once the visual domain changes. We call this <strong>attention&ndash;localization decoupling</strong>.
-          <span class="block mt-2 text-sm text-ink/45">Analysis with Qwen2.5-VL-3B fine-tuned on Charades-STA and evaluated on QVHighlights; the same pattern holds for InternVL3-2B.</span>
+          MLLMs already know <em>where</em> entities are. Fine-tuning teaches <em>when</em>, but on new visuals
+          the two come apart: <strong>attention&ndash;localization decoupling</strong>.
+          <span class="block mt-2 text-sm text-ink/45">Qwen2.5-VL-3B, Cha. &rarr; QVH; same trend on InternVL3-2B.</span>
         </p>
       </div>
 
 
           <div class="panel-head">
             <h3 class="panel-title">Entity-attention transfers. Learned grounding <span class="text-rose-500">doesn't</span>.</h3>
-            <p class="panel-sub">
-              Zero-shot, the MLLM already aligns query words with the right patches in both domains.
-              After fine-tuning, the ground-truth attention gain shows up in-domain but barely out-of-domain.
-            </p>
           </div>
       <figure class="observation-wrap reveal-on-scroll" data-spot="obs" data-splits="0,31,73.8,100">
         <img src="static/figures/observation.png" alt="(a) Zero-shot visual-text cosine similarity on Charades-STA and QVHighlights, (b) ID vs OOD R1@0.5 after fine-tuning, (c) G.T. attention increase after fine-tuning across layers 10–18 for ID and OOD." class="observation-figure zoomable" />
@@ -242,8 +235,7 @@
           <div class="panel-head">
             <h3 class="panel-title">It's the <span class="text-amber-500">visual</span> gap, not the concept gap.</h3>
             <p class="panel-sub">
-              We split the OOD gap into a <em>concept domain gap</em> (are the query concepts unseen?) and a
-              <em>visual domain gap</em> (how far are the videos from the source distribution?).
+              <em>Concept</em> gap: unseen query words. <em>Visual</em> gap: unfamiliar-looking videos.
             </p>
           </div>
       <figure class="observation-wrap reveal-on-scroll" data-spot="diag" data-splits="0,28.1,56.3,100">
@@ -261,8 +253,8 @@
         </div>
         <div class="obs-cap" tabindex="0" role="button" data-letter="c">
           <strong>The model stops looking.</strong>
-          On OOD, perturbing the G.T. interval hurts as much as a random one (<span class="font-mono">&minus;12.6 vs. &minus;12.1</span>).
-          Suppressing non-G.T. frames <em>helps</em> (+4.6), so steering toward evidence recouples them.
+          On OOD, perturbing the G.T. interval hurts no more than a random one (<span class="font-mono">&minus;12.6 vs. &minus;12.1</span>);
+          perturbing non-G.T. frames <em>helps</em> (+4.6).
         </div>
       </div>
     </div>
@@ -317,8 +309,7 @@
         <p class="kicker">Qualitative Analysis</p>
         <h2 class="section-title">What do the slots and the gate capture?</h2>
         <p class="section-sub max-w-3xl mx-auto">
-          Trained only on Charades-STA, the EB Adapter decomposes scenes into people, objects, and backgrounds on
-          <strong>unseen domains</strong> (QVHighlights, DiDeMo) without any domain-specific supervision.
+          Trained only on Charades-STA, the slots still split people, objects and background on <strong>unseen domains</strong>.
         </p>
       </div>
 
@@ -326,26 +317,22 @@
         <img src="static/figures/slotviz.jpg" alt="EB Adapter attention visualization on Charades-STA (ID), QVHighlights (OOD), and DiDeMo (OOD): each frame and its four slot masks." class="observation-figure zoomable" />
       </figure>
       <p class="mainfigure-cap">
-        <strong>EB Adapter attention.</strong> Each frame is masked by its highest-attending slot, for Cha. (ID), QVH (OOD), and DiDeMo (OOD) samples.
+        Each frame colored by its top slot. Cha. (ID), QVH and DiDeMo (OOD).
       </p>
 
       <div class="slotviz-layout slotviz-layout-wide mt-12">
         <div class="slotviz-text">
           <h3 class="slotviz-h">The gate lights up where the query's entities <em>are</em>.</h3>
           <p class="slotviz-p">
-            E2V gating scores each frame by how strongly it matches each query entity. The per-entity scores
-            follow the intervals in which each entity actually appears: <em>person</em> and <em>glass</em>
-            rise together once they enter the frame, while an absent concept (<em>zebra</em>) stays flat.
-          </p>
-          <p class="slotviz-p">
-            Because the gate multiplies the subject and object scores, the adapter's contribution concentrates on
-            frames where <strong>both</strong> entities co-occur. This inductive bias holds across domains.
+            Each entity's score rises only while it is on screen: <em>person</em> and <em>glass</em> climb together,
+            while the absent <em>zebra</em> stays flat. Because the gate multiplies the subject and object scores,
+            the adapter acts only where <strong>both</strong> appear, on in-domain and out-of-domain videos alike.
           </p>
         </div>
         <figure class="slotviz-fig reveal-on-scroll">
           <img src="static/figures/gating.png" alt="E2V gating scores per entity across frames on a Charades-STA sample (person, glass, phone, zebra) and a QVHighlights sample (person, dish, pot, computer)." class="zoomable" />
           <figcaption>
-            Per-entity gating scores on a Cha. (ID, left) and a QVH (OOD, right) sample. Arrows mark when each entity is visible.
+            Cha. (ID, left), QVH (OOD, right). Arrows: when each entity is visible.
           </figcaption>
         </figure>
       </div>
@@ -359,11 +346,8 @@
         <p class="kicker">Cross-Domain Results</p>
         <h2 class="section-title">Consistent OOD gains. Competitive ID performance.</h2>
         <p class="section-sub max-w-3xl mx-auto">
-          Each dataset has its own visual distribution, so we treat it as a distinct <em>visual domain</em>:
-          train on one, test on the others.
-          Built on Qwen2.5-VL-7B and compared against the same backbone fine-tuned with LoRA under the identical setup,
-          EVIDENT improves every out-of-domain setting while training ~201M parameters
-          (<span class="font-mono">2.42%</span> of the backbone).
+          Train on one dataset, test on the others. Same Qwen2.5-VL-7B backbone as the LoRA baseline;
+          EVIDENT trains only <span class="font-mono">2.42%</span> of its parameters.
         </p>
       </div>
 
@@ -386,7 +370,7 @@
           </div>
         </div>
         <div class="gains-plot" id="gains-plot"></div>
-        <figcaption class="gains-cap">Source &rarr; target dataset. <strong>R1@0.7</strong> = share of queries whose top-1 predicted window overlaps the ground truth with IoU &ge; 0.7 (the stricter metric). Every out-of-domain setting improves; the full numbers are in the table below.</figcaption>
+        <figcaption class="gains-cap">Source &rarr; target. <strong>R1@0.7</strong>: top-1 window overlaps the ground truth at IoU &ge; 0.7. Full numbers below.</figcaption>
         <div class="gains-tip" id="gains-tip" role="status" aria-live="polite"></div>
       </figure>
       </div>
@@ -503,9 +487,8 @@
         </table>
       </div>
       <p class="text-xs text-ink/55 italic mt-4 text-center">
-        <span class="not-italic text-ink/40">Gray</span>: In-Domain (source = target). <strong>Bold</strong>: best OOD result under each source &rarr; target setting.
-        &dagger;: our LoRA fine-tuned baseline under the same training setup. Zero-shot models are reported for reference;
-        &ldquo;&ndash;&rdquo; marks target datasets seen during their training or not reported.
+        <span class="not-italic text-ink/40">Gray</span>: in-domain. <strong>Bold</strong>: best OOD. &dagger;: our LoRA baseline.
+        &ldquo;&ndash;&rdquo;: seen in training or not reported.
       </p>
 
 
@@ -537,7 +520,7 @@
           <div class="stack-gap"></div>
           <div class="panel-head">
             <h3 class="panel-title">Every component pulls its weight.</h3>
-            <p class="panel-sub">All ablations on Cha. &rarr; QVH with Qwen2.5-VL-7B, reporting R1@0.5 / R1@0.7 for ID (Cha.) and OOD (QVH).</p>
+            <p class="panel-sub">Cha. &rarr; QVH, Qwen2.5-VL-7B. (b) and (c) use the adapter alone.</p>
           </div>
       <div class="ablation-grid">
         <div class="ablation-block">
@@ -571,7 +554,7 @@
               </tbody>
             </table>
           </div>
-          <p class="ablation-note">Adapter only, without EB Distillation or E2V gating. Replacing tokens before the LLM collapses; the residual adapter preserves pre-trained alignment.</p>
+          <p class="ablation-note">Replacing tokens before the LLM collapses; a residual adapter keeps pre-trained alignment.</p>
         </div>
 
         <div class="ablation-block">
@@ -588,7 +571,7 @@
               </tbody>
             </table>
           </div>
-          <p class="ablation-note">Adapter only, without EB Distillation or E2V gating. A self-attention adapter overfits (&minus;11.9 OOD R1@0.5); slot decomposition keeps the ID gain and improves OOD R1@0.7 by +3.4.</p>
+          <p class="ablation-note">Self-attention overfits (&minus;11.9 OOD R1@0.5); slots keep the ID gain and add +3.4 OOD R1@0.7.</p>
         </div>
 
         <div class="ablation-block">
@@ -624,7 +607,7 @@
               </tbody>
             </table>
           </div>
-          <p class="ablation-note">ID is stable, but OOD drops as slots increase (&minus;5.9 R1@0.5 from 4 to 16): extra slots split entities into fragments.</p>
+          <p class="ablation-note">More slots fragment entities: OOD R1@0.5 drops 5.9 from 4 to 16 slots.</p>
         </div>
 
         <div class="ablation-block">
@@ -641,7 +624,7 @@
               </tbody>
             </table>
           </div>
-          <p class="ablation-note">Gating is computed from the LLM's visual stream; the slot-reconstructed output discards details needed for entity scoring.</p>
+          <p class="ablation-note">Gate on the LLM's visual stream; slot-reconstructed features lose the detail needed to score entities.</p>
         </div>
         </div>
       </details>

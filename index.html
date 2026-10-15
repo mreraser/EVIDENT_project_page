@@ -143,7 +143,7 @@
       <!-- Key points, one per line -->
       <p id="tldr" class="tldr-kicker mt-12">TL;DR</p>
       <ul class="hero-points mt-4">
-        <li><span class="hp-tag hp-problem">Problem</span><span>Naïvely fine-tuned MLLMs <strong>stop looking</strong> at the video under visual domain shift.</span></li>
+        <li><span class="hp-tag hp-problem">Problem</span><span>On a new visual domain, naïvely fine-tuned MLLMs <strong>don&rsquo;t look at the query&rsquo;s entities anymore</strong>.</span></li>
         <li><span class="hp-tag hp-idea">Idea</span><span>Route adaptation through <strong>entity-level slots</strong> instead of dense visual tokens.</span></li>
         <li><span class="hp-tag hp-evidence">Evidence</span><span>Ground each prediction in frames where the <strong>query&rsquo;s entities</strong> actually appear.</span></li>
         <li><span class="hp-tag hp-result">Result</span><span>Up to <strong>+7.2</strong> OOD R1@0.7 over LoRA-tuned Qwen2.5-VL-7B, training only <strong>2.42%</strong> of parameters.</span></li>
@@ -190,11 +190,9 @@
     <div class="max-w-6xl mx-auto px-6">
       <div class="text-center mb-10">
         <p class="kicker">At a glance</p>
-        <h2 class="section-title">Same query. New domain. <span class="text-rose-500">Who</span> is still looking?</h2>
+        <h2 class="section-title">Same query. New domain. EVIDENT still finds the <span class="text-emerald-600">person</span> and the <span class="text-rose-500">book</span>.</h2>
         <p class="section-sub max-w-3xl mx-auto">
-          On an unseen domain, naïve fine-tuning loses the moment. EVIDENT keeps tracking the
-          <span class="font-semibold text-emerald-600">person</span> and the <span class="font-semibold text-rose-500">book</span>,
-          so its prediction stays grounded.
+          On an unseen domain, the naïvely fine-tuned model doesn&rsquo;t look at them anymore and misses the moment.
         </p>
       </div>
       <figure class="observation-wrap reveal-on-scroll">
@@ -261,7 +259,7 @@
           Top-20% visually similar: <span class="font-mono">52.8</span>; bottom-20%: <span class="font-mono">39.1</span> (13.7-pt gap).
         </div>
         <div class="obs-cap" tabindex="0" role="button" data-letter="c">
-          <strong>The model stops looking.</strong>
+          <strong>It doesn&rsquo;t look at the evidence anymore.</strong>
           On OOD, perturbing the G.T. interval hurts no more than a random one (<span class="font-mono">&minus;12.6 vs. &minus;12.1</span>);
           perturbing non-G.T. frames <em>helps</em> (+4.6).
         </div>

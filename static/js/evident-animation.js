@@ -523,7 +523,7 @@
       const d = await climb(7, 8, 700, g);
       try {
         const c0 = startOf(R.connector);
-        await fly(d, spineX(), rowMid(8), c0.x, c0.y, 350, g);      // glide to the connector instead of jumping
+        await fly(d, spineX(), rowMid(8), c0.x, c0.y, 550, g);      // glide to the connector instead of jumping
         await along(R.connector, d, 900, g);
         const [x, y] = pt(d);
         await fly(d, x, y, R.dec.cx, R.dec.late, 800, g);

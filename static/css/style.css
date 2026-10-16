@@ -1730,10 +1730,6 @@ figure.spotting .spot-ring { opacity: 1; }
 .rc-key-ood { border-color: var(--rc-ood); }
 .rc-key-dash { border-top: 2px dashed #9aa0b4; }
 .rc-key-solid { border-top: 3px solid #0a0e27; }
-.rc-legend b { font: 700 12.5px 'JetBrains Mono', monospace; padding: 2px 7px; border-radius: 6px; opacity: 0; transition: opacity 0.5s ease; }
-.rc-rate-base { color: #52566b; background: #f1f2f6; }
-.rc-rate-ours { color: #0f766e; background: #e6f4f1; }
-.recouple.s1 .rc-rate-base, .recouple.s2 .rc-rate-ours { opacity: 1; }
 .rc-plot { margin-top: 6px; min-width: 0; }
 .rc-plot svg { display: block; overflow: visible; }
 .rc-grid { stroke: #eceef3; stroke-width: 1; }

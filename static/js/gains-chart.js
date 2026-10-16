@@ -33,7 +33,7 @@
   };
 
   function render() {
-    W = Math.max(300, Math.round(root.getBoundingClientRect().width));
+    W = Math.max(220, Math.round(root.getBoundingClientRect().width));
     root.innerHTML = '';
     svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img', 'aria-label': ariaText() }, root);
     const gw = (W - LEFT - RIGHT) / GROUPS.length;

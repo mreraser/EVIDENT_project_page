@@ -1755,3 +1755,14 @@ figure.spotting .spot-ring { opacity: 1; }
   .rc-legend { font-size: 12px; gap: 4px 12px; }
   .rc-legend-sep { display: none; }
 }
+@media (max-width: 480px) {
+  /* 5-column ablation tables: fit a phone width instead of scrolling */
+  .ablation-table { font-size: 12.5px; }
+  .ablation-table th { font-size: 9.5px; letter-spacing: 0; padding: 7px 4px; }
+  .ablation-table td { padding: 7px 4px; }
+}
+@media (max-width: 400px) {
+  .ablation-table { font-size: 12px; }
+  .ablation-table th { font-size: 9px; padding: 6px 3px; }
+  .ablation-table td { padding: 6px 3px; }
+}

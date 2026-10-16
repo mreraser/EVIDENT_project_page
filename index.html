@@ -346,6 +346,31 @@
     </div>
   </section>
 
+  <!-- ============================ RE-COUPLING (Fig. 2(c) re-run) ============================ -->
+  <section id="recoupling" class="bg-ink text-white py-16 relative overflow-hidden">
+    <div class="absolute inset-0 hero-bg-grid opacity-30"></div>
+    <div class="relative max-w-6xl mx-auto px-6">
+      <div class="text-center mb-10">
+        <p class="kicker text-white/60">Back to the diagnosis</p>
+        <h2 class="section-title text-white">From <span class="rc-word-off">decoupled</span> to <span class="hero-grad whitespace-nowrap">re-coupled</span>.</h2>
+        <p class="section-sub text-white/70 max-w-3xl mx-auto">
+          Out of domain, naïve fine-tuning keeps only 37.8% of the attention gain it learned in&#8209;domain. EVIDENT keeps 87.6%.
+        </p>
+      </div>
+
+      <figure class="recouple reveal-on-scroll" id="recouple">
+        <div class="rc-legend" aria-hidden="true">
+          <span><i class="rc-key rc-key-id"></i>ID (Cha.)</span>
+          <span><i class="rc-key rc-key-ood"></i>OOD (QVH)</span>
+          <span class="rc-legend-sep"></span>
+          <span><i class="rc-key rc-key-dash"></i><span>Naïve fine-tuning</span> <b class="rc-rate-base">37.8%</b></span>
+          <span><i class="rc-key rc-key-solid"></i>EVIDENT <b class="rc-rate-ours">87.6%</b></span>
+        </div>
+        <div class="rc-plot" id="rc-plot"></div>
+      </figure>
+    </div>
+  </section>
+
   <!-- ============================ RESULTS ============================ -->
   <section id="results" class="bg-white py-16">
     <div class="max-w-6xl mx-auto px-6">
@@ -692,5 +717,6 @@
   <script src="static/js/evident-animation.js"></script>
   <script src="static/js/main.js"></script>
   <script src="static/js/gains-chart.js"></script>
+  <script src="static/js/recouple-chart.js"></script>
 </body>
 </html>
